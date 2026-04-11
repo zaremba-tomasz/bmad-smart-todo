@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# pnpm
+.pnpm-store/
+
+# macOS
+.DS_Store
+
+# JetBrains IDEs
+.idea/
