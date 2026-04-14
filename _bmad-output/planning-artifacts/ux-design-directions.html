@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Todo — Design Direction Mockups</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --surface: #FDFBF7;
+    --surface-raised: #FFFFFF;
+    --surface-completed: #FEF6E8;
+    --surface-extracted: #FEFDF5;
+    --text-primary: #1C1917;
+    --text-secondary: #78716C;
+    --text-tertiary: #A8A29E;
+    --coral-500: #EF6351;
+    --coral-600: #DC4A38;
+    --coral-100: #FEE5E1;
+    --amber-500: #F59E0B;
+    --amber-400: #FBBF24;
+    --amber-100: #FEF3C7;
+    --amber-900: #78350F;
+    --border-default: #E7E5E4;
+    --border-focus: #D6D3D1;
+    --shimmer-base: #F5F5F4;
+    --stone-100: #F5F5F4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    background: #F0EFED;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  .page-header {
+    background: var(--text-primary);
+    color: white;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .page-header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+  .page-header p { font-size: 14px; color: #A8A29E; max-width: 600px; margin: 0 auto; }
+
+  .nav {
+    background: var(--surface-raised);
+    border-bottom: 1px solid var(--border-default);
+    padding: 12px 24px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav button {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 80ms;
+  }
+  .nav button:hover { border-color: var(--border-focus); color: var(--text-primary); }
+  .nav button.active {
+    background: var(--text-primary);
+    color: white;
+    border-color: var(--text-primary);
+  }
+
+  .direction { display: none; padding: 32px 24px; }
+  .direction.active { display: block; }
+
+  .direction-header {
+    max-width: 800px;
+    margin: 0 auto 32px;
+  }
+  .direction-header h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+  .direction-header .subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; }
+  .direction-header .tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .direction-header .tag {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    background: var(--amber-100);
+    color: var(--amber-900);
+    font-weight: 500;
+  }
+
+  .mockup-frame {
+    max-width: 800px;
+    margin: 0 auto 32px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .phone-frame {
+    width: 375px;
+    min-width: 375px;
+    height: 740px;
+    background: var(--surface);
+    border-radius: 40px;
+    border: 8px solid #1C1917;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+  }
+
+  .phone-notch {
+    width: 150px;
+    height: 30px;
+    background: #1C1917;
+    border-radius: 0 0 20px 20px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+  }
+
+  .phone-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .desktop-frame {
+    flex: 1;
+    min-height: 500px;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border-default);
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.08);
+  }
+
+  .desktop-titlebar {
+    height: 36px;
+    background: var(--stone-100);
+    border-bottom: 1px solid var(--border-default);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 6px;
+  }
+  .desktop-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .desktop-dot.red { background: #EF6351; }
+  .desktop-dot.yellow { background: #F59E0B; }
+  .desktop-dot.green { background: #4ADE80; }
+  .desktop-tab {
+    margin-left: 12px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--surface);
+    padding: 4px 12px;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid var(--border-default);
+    border-bottom: none;
+    margin-bottom: -1px;
+  }
+
+  .desktop-content {
+    padding: 24px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .app-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .app-logo {
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .app-count {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--amber-900);
+    background: var(--amber-100);
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+
+  .capture-input-container {
+    padding: 12px 16px;
+    background: var(--surface-raised);
+    border-top: 1px solid var(--border-default);
+  }
+  .capture-input-container.top {
+    border-top: none;
+    border-bottom: 1px solid var(--border-default);
+    padding: 16px;
+  }
+  .capture-input {
+    width: 100%;
+    padding: 12px 44px 12px 16px;
+    font-size: 16px;
+    font-family: inherit;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    background: var(--surface-raised);
+    color: var(--text-primary);
+    outline: none;
+  }
+  .capture-input::placeholder { color: var(--text-tertiary); }
+  .capture-input:focus { border-color: var(--amber-500); box-shadow: 0 0 0 2px rgba(245,158,11,0.2); }
+  .capture-input-wrapper {
+    position: relative;
+  }
+  .capture-submit {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: var(--text-primary);
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .section-header {
+    padding: 16px 16px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+  }
+
+  .task-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+  }
+
+  .task-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-default);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .task-item.completed {
+    background: var(--surface-completed);
+  }
+
+  .task-checkbox {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border-focus);
+    margin-top: 2px;
+    cursor: pointer;
+    transition: all 100ms;
+  }
+  .task-checkbox:hover { border-color: var(--amber-500); }
+  .task-checkbox.checked {
+    background: var(--amber-500);
+    border-color: var(--amber-500);
+    position: relative;
+  }
+  .task-checkbox.checked::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .task-content { flex: 1; }
+  .task-title {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.35;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .task-title.done {
+    text-decoration: none;
+    color: var(--amber-900);
+  }
+  .task-meta {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .priority-badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .priority-urgent { background: var(--coral-500); color: white; }
+  .priority-high { background: var(--coral-100); color: var(--coral-600); }
+  .priority-medium { background: var(--amber-100); color: var(--amber-900); }
+
+  .completed-section {
+    border-top: 1px solid var(--border-default);
+  }
+  .completed-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+  .completed-header:hover { background: var(--shimmer-base); }
+  .completed-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--amber-900);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .completed-count-badge {
+    background: var(--amber-100);
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--amber-900);
+  }
+  .completed-chevron {
+    color: var(--text-tertiary);
+    font-size: 12px;
+    transition: transform 200ms;
+  }
+
+  .extraction-form {
+    padding: 12px 16px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    margin: 8px 16px;
+  }
+  .extraction-field {
+    padding: 8px 12px;
+    background: var(--surface-extracted);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .extraction-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    min-width: 60px;
+  }
+  .extraction-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    flex: 1;
+  }
+  .add-field {
+    font-size: 14px;
+    color: var(--text-tertiary);
+    padding: 6px 0;
+    cursor: pointer;
+  }
+  .add-field:hover { color: var(--text-secondary); }
+  .save-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .save-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: var(--text-primary);
+    color: white;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .save-btn:hover { opacity: 0.9; }
+  .feedback-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    background: var(--surface);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .feedback-btn:hover { border-color: var(--border-focus); }
+
+  .ai-badge {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .group-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px 16px;
+    overflow-x: auto;
+  }
+  .group-tab {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border-default);
+    background: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .group-tab.active {
+    background: var(--text-primary);
+    color: white;
+    border-color: var(--text-primary);
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, var(--shimmer-base) 0%, #FAFAF9 50%, var(--shimmer-base) 100%);
+    background-size: 200% 100%;
+    animation: shimmer-anim 2s ease-in-out infinite;
+    border-radius: 8px;
+    height: 40px;
+    margin-bottom: 8px;
+  }
+  @keyframes shimmer-anim {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .notes {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px;
+    background: var(--surface-raised);
+    border-radius: 12px;
+    border: 1px solid var(--border-default);
+    margin-bottom: 32px;
+  }
+  .notes h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+  .notes ul { padding-left: 20px; font-size: 14px; color: var(--text-secondary); }
+  .notes li { margin-bottom: 6px; }
+
+  .side-by-side {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    color: var(--text-tertiary);
+    text-align: center;
+  }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-state .empty-text { font-size: 14px; line-height: 1.5; max-width: 240px; }
+
+  .input-visible {
+    padding: 12px 16px;
+    font-size: 16px;
+    color: var(--text-secondary);
+    background: var(--amber-100);
+    border-bottom: 1px solid var(--border-default);
+    font-style: italic;
+  }
+
+  .safe-area { height: 20px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Smart Todo — Design Directions</h1>
+  <p>Explore different layout and interaction approaches within the "Clear + Warm" visual foundation. All directions use the same color tokens, typography, and spacing system.</p>
+</div>
+
+<nav class="nav">
+  <button class="active" onclick="show('d1')">1. Task List</button>
+  <button onclick="show('d2')">2. Extraction Flow</button>
+  <button onclick="show('d3')">3. Empty State</button>
+  <button onclick="show('d4')">4. Completed Tasks</button>
+  <button onclick="show('d5')">5. Groups & Filtering</button>
+  <button onclick="show('d6')">6. Full Mobile Flow</button>
+</nav>
+
+<!-- Direction 1: Core Task List -->
+<div class="direction active" id="d1">
+  <div class="direction-header">
+    <h2>Direction 1: Core Task List — Active Tasks with Temporal Grouping</h2>
+    <div class="subtitle">The daily view: tasks organized by temporal zones with the bottom-docked capture input on mobile, top-prominent on desktop.</div>
+    <div class="tags">
+      <span class="tag">Temporal Zones</span>
+      <span class="tag">Typography Hierarchy</span>
+      <span class="tag">Completed Count</span>
+    </div>
+  </div>
+
+  <div class="mockup-frame">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-content">
+        <div class="app-header">
+          <span class="app-logo">Smart Todo</span>
+          <span class="app-count">14 this week</span>
+        </div>
+        <div class="group-tabs">
+          <button class="group-tab active">All</button>
+          <button class="group-tab">Work</button>
+          <button class="group-tab">Family</button>
+          <button class="group-tab">Personal</button>
+        </div>
+        <div class="task-list">
+          <div class="section-header">Today · 3 tasks</div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Pay electricity bill <span class="priority-badge priority-urgent">Urgent</span></div>
+              <div class="task-meta">Due today</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Reply to Anna's email</div>
+              <div class="task-meta">Due today · Work</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Call the mechanic about winter tyres</div>
+              <div class="task-meta">Due today · Personal</div>
+            </div>
+          </div>
+          <div class="section-header">This Week · 4 tasks</div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Book dentist for Olek <span class="priority-badge priority-medium">Medium</span></div>
+              <div class="task-meta">Next Monday · Family</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Parent-teacher meeting</div>
+              <div class="task-meta">Thursday 5:00 PM · Family</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Update quarterly sales report <span class="priority-badge priority-high">High</span></div>
+              <div class="task-meta">Friday · Work</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Buy snacks for Kuba's football</div>
+              <div class="task-meta">Saturday · Family</div>
+            </div>
+          </div>
+          <div class="section-header">No Date · 2 tasks</div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Research flight prices to Kraków</div>
+              <div class="task-meta">Personal</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Ask Ola about summer camp</div>
+              <div class="task-meta">Family</div>
+            </div>
+          </div>
+        </div>
+        <div class="completed-section">
+          <div class="completed-header">
+            <span class="completed-label">Completed <span class="completed-count-badge">14</span></span>
+            <span class="completed-chevron">▼</span>
+          </div>
+        </div>
+        <div class="capture-input-container">
+          <div class="capture-input-wrapper">
+            <input class="capture-input" placeholder="Try: Call the dentist next Monday, high priority" readonly>
+            <button class="capture-submit">→</button>
+          </div>
+        </div>
+        <div class="safe-area"></div>
+      </div>
+    </div>
+
+    <div class="desktop-frame">
+      <div class="desktop-titlebar">
+        <div class="desktop-dot red"></div>
+        <div class="desktop-dot yellow"></div>
+        <div class="desktop-dot green"></div>
+        <div class="desktop-tab">3 tasks · Smart Todo</div>
+      </div>
+      <div class="desktop-content">
+        <div class="app-header" style="padding: 16px 0;">
+          <span class="app-logo">Smart Todo</span>
+          <span class="app-count">14 this week</span>
+        </div>
+        <div class="capture-input-container top" style="padding: 0 0 16px; border: none;">
+          <div class="capture-input-wrapper">
+            <input class="capture-input" placeholder="Try: Call the dentist next Monday, high priority" readonly>
+            <button class="capture-submit">→</button>
+          </div>
+        </div>
+        <div class="group-tabs" style="padding: 0 0 8px;">
+          <button class="group-tab active">All</button>
+          <button class="group-tab">Work</button>
+          <button class="group-tab">Family</button>
+          <button class="group-tab">Personal</button>
+        </div>
+        <div class="section-header" style="padding: 16px 0 8px;">Today · 3 tasks</div>
+        <div class="task-item" style="padding: 12px 0; border-color: var(--border-default);">
+          <div class="task-checkbox"></div>
+          <div class="task-content">
+            <div class="task-title">Pay electricity bill <span class="priority-badge priority-urgent">Urgent</span></div>
+            <div class="task-meta">Due today</div>
+          </div>
+        </div>
+        <div class="task-item" style="padding: 12px 0;">
+          <div class="task-checkbox"></div>
+          <div class="task-content">
+            <div class="task-title">Reply to Anna's email</div>
+            <div class="task-meta">Due today · Work</div>
+          </div>
+        </div>
+        <div class="section-header" style="padding: 16px 0 8px;">This Week · 4 tasks</div>
+        <div class="task-item" style="padding: 12px 0;">
+          <div class="task-checkbox"></div>
+          <div class="task-content">
+            <div class="task-title">Book dentist for Olek <span class="priority-badge priority-medium">Medium</span></div>
+            <div class="task-meta">Next Monday · Family</div>
+          </div>
+        </div>
+        <div class="ai-badge" style="padding: 16px 0 0; justify-content: center;">✦ Powered by AI</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Direction 2: Extraction Flow -->
+<div class="direction" id="d2">
+  <div class="direction-header">
+    <h2>Direction 2: Extraction Flow — Before/After Visibility</h2>
+    <div class="subtitle">The defining moment: user's raw text stays visible while extracted fields snap into place below. Populated fields only.</div>
+    <div class="tags">
+      <span class="tag">Before/After</span>
+      <span class="tag">Populated Fields Only</span>
+      <span class="tag">250ms Snap</span>
+    </div>
+  </div>
+
+  <div class="mockup-frame">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-content">
+        <div class="app-header">
+          <span class="app-logo">Smart Todo</span>
+          <span class="app-count">14 this week</span>
+        </div>
+        <div class="task-list">
+          <div class="section-header">Today · 2 tasks</div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Pay electricity bill <span class="priority-badge priority-urgent">Urgent</span></div>
+              <div class="task-meta">Due today</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Reply to Anna's email</div>
+              <div class="task-meta">Due today · Work</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="extraction-form" style="margin: auto 16px 8px;">
+          <div class="extraction-field">
+            <span class="extraction-label">Title</span>
+            <span class="extraction-value">Book dentist for Olek</span>
+          </div>
+          <div class="extraction-field">
+            <span class="extraction-label">Due</span>
+            <span class="extraction-value">Next Monday</span>
+          </div>
+          <div class="add-field">+ Add priority · + Add location</div>
+          <div class="save-row">
+            <button class="save-btn">Save Task</button>
+            <button class="feedback-btn">👍</button>
+            <button class="feedback-btn">👎</button>
+          </div>
+        </div>
+
+        <div class="capture-input-container">
+          <div class="input-visible" style="margin: 0 0 8px; border-radius: 8px; padding: 8px 12px; background: var(--amber-100); border: none; font-style: italic; font-size: 14px;">
+            "Book dentist for Olek next week"
+          </div>
+          <div class="capture-input-wrapper">
+            <input class="capture-input" value="" placeholder="Type next task..." readonly style="opacity: 0.5;">
+            <button class="capture-submit" style="opacity: 0.5;">→</button>
+          </div>
+        </div>
+        <div class="safe-area"></div>
+      </div>
+    </div>
+
+    <div class="desktop-frame">
+      <div class="desktop-titlebar">
+        <div class="desktop-dot red"></div>
+        <div class="desktop-dot yellow"></div>
+        <div class="desktop-dot green"></div>
+        <div class="desktop-tab">3 tasks · Smart Todo</div>
+      </div>
+      <div class="desktop-content">
+        <div class="app-header" style="padding: 16px 0;">
+          <span class="app-logo">Smart Todo</span>
+          <span class="app-count">14 this week</span>
+        </div>
+        <div style="padding: 0 0 8px;">
+          <div class="capture-input-wrapper">
+            <input class="capture-input" value="Book dentist for Olek next week" readonly style="background: var(--amber-100); border-color: var(--amber-500); color: var(--text-secondary); font-style: italic;">
+          </div>
+        </div>
+        <div class="extraction-form" style="margin: 0 0 16px;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+            <span style="font-size: 11px; color: var(--text-tertiary);">✦ Powered by AI</span>
+          </div>
+          <div class="extraction-field">
+            <span class="extraction-label">Title</span>
+            <span class="extraction-value">Book dentist for Olek</span>
+          </div>
+          <div class="extraction-field">
+            <span class="extraction-label">Due</span>
+            <span class="extraction-value">Next Monday</span>
+          </div>
+          <div class="add-field">+ Add priority · + Add location · + Add recurrence</div>
+          <div class="save-row">
+            <button class="save-btn">Save Task</button>
+            <button class="feedback-btn">👍</button>
+            <button class="feedback-btn">👎</button>
+          </div>
+        </div>
+
+        <div class="section-header" style="padding: 16px 0 8px;">Today · 2 tasks</div>
+        <div class="task-item" style="padding: 12px 0;">
+          <div class="task-checkbox"></div>
+          <div class="task-content">
+            <div class="task-title">Pay electricity bill <span class="priority-badge priority-urgent">Urgent</span></div>
+            <div class="task-meta">Due today</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Key Design Decisions Shown</h3>
+    <ul>
+      <li><strong>Before/after:</strong> Raw input text stays visible (amber highlight on mobile, in input field on desktop) while extracted fields appear below/above.</li>
+      <li><strong>Populated fields only:</strong> Only Title and Due date appear (extracted with confidence). Priority, location, recurrence hidden behind "+ Add" links.</li>
+      <li><strong>surface-extracted tint:</strong> The subtle warm background on extracted fields signals "AI filled this."</li>
+      <li><strong>Feedback controls:</strong> Thumbs up/down inline with save — unobtrusive, not blocking.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Direction 3: Empty State -->
+<div class="direction" id="d3">
+  <div class="direction-header">
+    <h2>Direction 3: Empty State — First-Use Revelation</h2>
+    <div class="subtitle">What new users see: a confident, inviting blank slate with the placeholder example ready to demonstrate multi-field extraction.</div>
+    <div class="tags">
+      <span class="tag">First-Use</span>
+      <span class="tag">Placeholder Example</span>
+      <span class="tag">Confident Absence</span>
+    </div>
+  </div>
+
+  <div class="mockup-frame">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-content">
+        <div class="app-header">
+          <span class="app-logo">Smart Todo</span>
+        </div>
+        <div class="empty-state">
+          <div class="empty-icon">☀️</div>
+          <div class="empty-text">Your tasks will appear here.<br><br>Type a task below to get started — try the suggestion!</div>
+        </div>
+        <div class="capture-input-container">
+          <div class="capture-input-wrapper">
+            <input class="capture-input" placeholder="Try: Call the dentist next Monday, high priority" readonly>
+            <button class="capture-submit">→</button>
+          </div>
+        </div>
+        <div class="safe-area"></div>
+      </div>
+    </div>
+
+    <div class="desktop-frame">
+      <div class="desktop-titlebar">
+        <div class="desktop-dot red"></div>
+        <div class="desktop-dot yellow"></div>
+        <div class="desktop-dot green"></div>
+        <div class="desktop-tab">Smart Todo</div>
+      </div>
+      <div class="desktop-content">
+        <div class="app-header" style="padding: 16px 0;">
+          <span class="app-logo">Smart Todo</span>
+        </div>
+        <div style="padding: 0 0 16px;">
+          <div class="capture-input-wrapper">
+            <input class="capture-input" placeholder="Try: Call the dentist next Monday, high priority" readonly style="font-size: 16px; padding: 14px 44px 14px 16px;">
+            <button class="capture-submit">→</button>
+          </div>
+        </div>
+        <div class="empty-state" style="min-height: 300px;">
+          <div class="empty-icon">☀️</div>
+          <div class="empty-text">Your tasks will appear here.<br><br>Type a task above — try the suggestion to see the magic.</div>
+        </div>
+        <div class="ai-badge" style="justify-content: center; padding: 16px 0;">✦ Powered by AI</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Key Design Decisions Shown</h3>
+    <ul>
+      <li><strong>Confident absence:</strong> No "You haven't added any tasks yet!" No exclamation marks. Just a warm invitation.</li>
+      <li><strong>Placeholder as onboarding:</strong> "Try: Call the dentist next Monday, high priority" — the user's first interaction demonstrates multi-field extraction.</li>
+      <li><strong>Pin prompt:</strong> After first successful save, a one-time suggestion to pin the tab would appear here (not shown — it's a transient element).</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Direction 4: Completed Tasks -->
+<div class="direction" id="d4">
+  <div class="direction-header">
+    <h2>Direction 4: Completed Tasks — The Trophy Wall</h2>
+    <div class="subtitle">The emotional payoff: completed count always visible, full list expandable, warm amber treatment. Satisfaction, not gamification.</div>
+    <div class="tags">
+      <span class="tag">Always-Visible Count</span>
+      <span class="tag">Expandable List</span>
+      <span class="tag">Warm Amber</span>
+    </div>
+  </div>
+
+  <div class="mockup-frame">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-content">
+        <div class="app-header">
+          <span class="app-logo">Smart Todo</span>
+          <span class="app-count">14 this week</span>
+        </div>
+        <div class="task-list">
+          <div class="section-header">Today · 1 task</div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Update quarterly sales report <span class="priority-badge priority-high">High</span></div>
+              <div class="task-meta">Due today · Work</div>
+            </div>
+          </div>
+
+          <div class="completed-section">
+            <div class="completed-header">
+              <span class="completed-label">Completed <span class="completed-count-badge">3 today · 14 this week</span></span>
+              <span class="completed-chevron" style="transform: rotate(180deg);">▼</span>
+            </div>
+
+            <div class="task-item completed">
+              <div class="task-checkbox checked"></div>
+              <div class="task-content">
+                <div class="task-title done">Pay electricity bill</div>
+                <div class="task-meta" style="color: var(--amber-900);">Completed today</div>
+              </div>
+            </div>
+            <div class="task-item completed">
+              <div class="task-checkbox checked"></div>
+              <div class="task-content">
+                <div class="task-title done">Reply to Anna's email</div>
+                <div class="task-meta" style="color: var(--amber-900);">Completed today</div>
+              </div>
+            </div>
+            <div class="task-item completed">
+              <div class="task-checkbox checked"></div>
+              <div class="task-content">
+                <div class="task-title done">Call the mechanic</div>
+                <div class="task-meta" style="color: var(--amber-900);">Completed today</div>
+              </div>
+            </div>
+            <div class="task-item completed">
+              <div class="task-checkbox checked"></div>
+              <div class="task-content">
+                <div class="task-title done">Book dentist for Olek</div>
+                <div class="task-meta" style="color: var(--amber-900);">Completed yesterday</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="capture-input-container">
+          <div class="capture-input-wrapper">
+            <input class="capture-input" placeholder="Add a task..." readonly>
+            <button class="capture-submit">→</button>
+          </div>
+        </div>
+        <div class="safe-area"></div>
+      </div>
+    </div>
+
+    <div class="desktop-frame">
+      <div class="desktop-titlebar">
+        <div class="desktop-dot red"></div>
+        <div class="desktop-dot yellow"></div>
+        <div class="desktop-dot green"></div>
+        <div class="desktop-tab">1 task · Smart Todo</div>
+      </div>
+      <div class="desktop-content">
+        <div class="app-header" style="padding: 16px 0;">
+          <span class="app-logo">Smart Todo</span>
+          <span class="app-count">3 today · 14 this week</span>
+        </div>
+
+        <div class="completed-section" style="background: var(--surface-completed); border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--amber-100);">
+          <div class="completed-header">
+            <span class="completed-label" style="font-size: 15px;">✓ 3 completed today</span>
+          </div>
+          <div class="task-item completed" style="border-color: var(--amber-100);">
+            <div class="task-checkbox checked"></div>
+            <div class="task-content">
+              <div class="task-title done">Pay electricity bill</div>
+              <div class="task-meta" style="color: var(--amber-900);">Completed 2:30 PM</div>
+            </div>
+          </div>
+          <div class="task-item completed" style="border-color: var(--amber-100);">
+            <div class="task-checkbox checked"></div>
+            <div class="task-content">
+              <div class="task-title done">Reply to Anna's email</div>
+              <div class="task-meta" style="color: var(--amber-900);">Completed 11:15 AM</div>
+            </div>
+          </div>
+          <div class="task-item completed" style="border-color: var(--amber-100); border-bottom: none;">
+            <div class="task-checkbox checked"></div>
+            <div class="task-content">
+              <div class="task-title done">Call the mechanic</div>
+              <div class="task-meta" style="color: var(--amber-900);">Completed 9:40 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Key Design Decisions Shown</h3>
+    <ul>
+      <li><strong>Count always visible:</strong> "14 this week" in the header. "3 today · 14 this week" in the completed section. No tap needed to see progress.</li>
+      <li><strong>Amber warmth:</strong> Completed items have the surface-completed background. Checkmarks use amber-500. Text uses amber-900. The warmth is earned.</li>
+      <li><strong>Expandable list:</strong> Completed section expands with chevron. The count is the daily signal; the full list is the receipt.</li>
+      <li><strong>Desktop variation:</strong> Shows completed items in a warm card — giving them their own visual territory rather than inline with active tasks.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Direction 5: Groups & Filtering -->
+<div class="direction" id="d5">
+  <div class="direction-header">
+    <h2>Direction 5: Groups & Filtering — Progressive Enhancement</h2>
+    <div class="subtitle">Groups are optional: "All" is the default, group pills filter the list. The 3-group limit is communicated when creating the first group.</div>
+    <div class="tags">
+      <span class="tag">Pill Filters</span>
+      <span class="tag">Progressive</span>
+      <span class="tag">3-Group Limit</span>
+    </div>
+  </div>
+
+  <div class="side-by-side">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-content">
+        <div class="app-header">
+          <span class="app-logo">Smart Todo</span>
+          <span class="app-count">14 this week</span>
+        </div>
+        <div class="group-tabs">
+          <button class="group-tab active">All</button>
+          <button class="group-tab" style="background: var(--coral-100); color: var(--coral-600); border-color: var(--coral-100);">Work</button>
+          <button class="group-tab" style="background: var(--amber-100); color: var(--amber-900); border-color: var(--amber-100);">Family</button>
+          <button class="group-tab">Personal</button>
+        </div>
+        <div class="task-list">
+          <div class="section-header">Today · 3 tasks</div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Pay electricity bill <span class="priority-badge priority-urgent">Urgent</span></div>
+              <div class="task-meta">Due today</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Reply to Anna's email</div>
+              <div class="task-meta">Due today · Work</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Call the mechanic</div>
+              <div class="task-meta">Due today · Personal</div>
+            </div>
+          </div>
+          <div class="section-header">This Week · 2 tasks</div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Parent-teacher meeting</div>
+              <div class="task-meta">Thursday 5:00 PM · Family</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Buy snacks for football</div>
+              <div class="task-meta">Saturday · Family</div>
+            </div>
+          </div>
+        </div>
+        <div class="completed-section">
+          <div class="completed-header">
+            <span class="completed-label">Completed <span class="completed-count-badge">14</span></span>
+            <span class="completed-chevron">▼</span>
+          </div>
+        </div>
+        <div class="capture-input-container">
+          <div class="capture-input-wrapper">
+            <input class="capture-input" placeholder="Add a task..." readonly>
+            <button class="capture-submit">→</button>
+          </div>
+        </div>
+        <div class="safe-area"></div>
+      </div>
+    </div>
+
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-content">
+        <div class="app-header">
+          <span class="app-logo">Smart Todo</span>
+          <span class="app-count">14 this week</span>
+        </div>
+        <div class="group-tabs">
+          <button class="group-tab">All</button>
+          <button class="group-tab">Work</button>
+          <button class="group-tab active" style="background: var(--amber-900); border-color: var(--amber-900);">Family</button>
+          <button class="group-tab">Personal</button>
+        </div>
+        <div class="task-list">
+          <div class="section-header">This Week · Family · 3 tasks</div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Book dentist for Olek <span class="priority-badge priority-medium">Medium</span></div>
+              <div class="task-meta">Next Monday</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Parent-teacher meeting</div>
+              <div class="task-meta">Thursday 5:00 PM</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Buy snacks for Kuba's football</div>
+              <div class="task-meta">Saturday</div>
+            </div>
+          </div>
+          <div class="section-header">No Date · Family · 1 task</div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Ask Ola about summer camp</div>
+            </div>
+          </div>
+        </div>
+        <div class="completed-section">
+          <div class="completed-header">
+            <span class="completed-label">Completed <span class="completed-count-badge">5</span></span>
+            <span class="completed-chevron">▼</span>
+          </div>
+        </div>
+        <div class="capture-input-container">
+          <div class="capture-input-wrapper">
+            <input class="capture-input" placeholder="Add a task..." readonly>
+            <button class="capture-submit">→</button>
+          </div>
+        </div>
+        <div class="safe-area"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes" style="margin-top: 32px;">
+    <h3>Key Design Decisions Shown</h3>
+    <ul>
+      <li><strong>Left:</strong> "All" view — every task visible, groups shown as metadata on individual tasks.</li>
+      <li><strong>Right:</strong> "Family" filter active — only family tasks shown, temporal grouping still applies, group label removed from metadata (redundant).</li>
+      <li><strong>Pill filters:</strong> Horizontal scrollable pills. "All" is always first. Groups can optionally have color tints.</li>
+      <li><strong>Progressive:</strong> For users with no groups, the pill bar wouldn't appear at all — just the task list.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Direction 6: Full Mobile Flow -->
+<div class="direction" id="d6">
+  <div class="direction-header">
+    <h2>Direction 6: Full Mobile Capture Flow — Frame by Frame</h2>
+    <div class="subtitle">The complete capture loop on mobile: idle → typing → waiting → extraction → save → reset. Five states, one continuous experience.</div>
+    <div class="tags">
+      <span class="tag">Capture Loop</span>
+      <span class="tag">State Machine</span>
+      <span class="tag">Mobile Flow</span>
+    </div>
+  </div>
+
+  <div class="side-by-side">
+    <div style="text-align: center;">
+      <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">1. IDLE</div>
+      <div class="phone-frame" style="height: 520px; width: 260px; min-width: 260px; transform: scale(0.95);">
+        <div class="phone-notch" style="width: 100px;"></div>
+        <div class="phone-content">
+          <div class="app-header" style="padding: 8px 12px;">
+            <span class="app-logo" style="font-size: 15px;">Smart Todo</span>
+            <span class="app-count" style="font-size: 12px;">14</span>
+          </div>
+          <div class="task-list" style="font-size: 14px;">
+            <div class="section-header" style="font-size: 11px; padding: 10px 12px 4px;">Today · 3</div>
+            <div class="task-item" style="padding: 8px 12px;">
+              <div class="task-checkbox" style="width: 16px; height: 16px; min-width: 16px;"></div>
+              <div class="task-content">
+                <div class="task-title" style="font-size: 14px;">Pay electricity bill</div>
+                <div class="task-meta" style="font-size: 12px;">Due today</div>
+              </div>
+            </div>
+            <div class="task-item" style="padding: 8px 12px;">
+              <div class="task-checkbox" style="width: 16px; height: 16px; min-width: 16px;"></div>
+              <div class="task-content">
+                <div class="task-title" style="font-size: 14px;">Reply to Anna</div>
+                <div class="task-meta" style="font-size: 12px;">Due today</div>
+              </div>
+            </div>
+          </div>
+          <div class="capture-input-container" style="padding: 8px 12px;">
+            <div class="capture-input-wrapper">
+              <input class="capture-input" placeholder="Try: Call the dentist..." readonly style="font-size: 14px; padding: 10px 36px 10px 12px;">
+              <button class="capture-submit" style="width: 28px; height: 28px; font-size: 12px;">→</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center;">
+      <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">2. TYPING</div>
+      <div class="phone-frame" style="height: 520px; width: 260px; min-width: 260px; transform: scale(0.95);">
+        <div class="phone-notch" style="width: 100px;"></div>
+        <div class="phone-content">
+          <div class="app-header" style="padding: 8px 12px;">
+            <span class="app-logo" style="font-size: 15px;">Smart Todo</span>
+            <span class="app-count" style="font-size: 12px;">14</span>
+          </div>
+          <div class="task-list" style="font-size: 14px;">
+            <div class="section-header" style="font-size: 11px; padding: 10px 12px 4px;">Today · 3</div>
+            <div class="task-item" style="padding: 8px 12px;">
+              <div class="task-checkbox" style="width: 16px; height: 16px; min-width: 16px;"></div>
+              <div class="task-content">
+                <div class="task-title" style="font-size: 14px;">Pay electricity bill</div>
+              </div>
+            </div>
+          </div>
+          <div style="background: #E8E6E3; padding: 8px 12px; font-size: 12px; color: var(--text-tertiary); text-align: center;">⌨️ Keyboard area</div>
+          <div class="capture-input-container" style="padding: 8px 12px;">
+            <div class="capture-input-wrapper">
+              <input class="capture-input" value="Book dentist for Olek next week" readonly style="font-size: 14px; padding: 10px 36px 10px 12px; border-color: var(--amber-500); box-shadow: 0 0 0 2px rgba(245,158,11,0.2);">
+              <button class="capture-submit" style="width: 28px; height: 28px; font-size: 12px; background: var(--amber-500);">→</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center;">
+      <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">3. EXTRACTING</div>
+      <div class="phone-frame" style="height: 520px; width: 260px; min-width: 260px; transform: scale(0.95);">
+        <div class="phone-notch" style="width: 100px;"></div>
+        <div class="phone-content">
+          <div class="app-header" style="padding: 8px 12px;">
+            <span class="app-logo" style="font-size: 15px;">Smart Todo</span>
+            <span class="app-count" style="font-size: 12px;">14</span>
+          </div>
+          <div class="task-list" style="font-size: 14px;">
+            <div class="task-item" style="padding: 8px 12px;">
+              <div class="task-checkbox" style="width: 16px; height: 16px; min-width: 16px;"></div>
+              <div class="task-content">
+                <div class="task-title" style="font-size: 14px;">Pay electricity bill</div>
+              </div>
+            </div>
+          </div>
+          <div style="padding: 8px 12px;">
+            <div class="shimmer"></div>
+            <div class="shimmer" style="width: 60%;"></div>
+          </div>
+          <div class="capture-input-container" style="padding: 8px 12px;">
+            <div style="font-size: 13px; color: var(--text-secondary); font-style: italic; padding: 4px 0 8px; background: var(--amber-100); border-radius: 8px; padding: 6px 10px; margin-bottom: 8px;">
+              "Book dentist for Olek next week"
+            </div>
+            <div class="capture-input-wrapper">
+              <input class="capture-input" placeholder="..." readonly style="font-size: 14px; padding: 10px 12px; opacity: 0.3;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center;">
+      <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">4. EXTRACTED</div>
+      <div class="phone-frame" style="height: 520px; width: 260px; min-width: 260px; transform: scale(0.95);">
+        <div class="phone-notch" style="width: 100px;"></div>
+        <div class="phone-content">
+          <div class="app-header" style="padding: 8px 12px;">
+            <span class="app-logo" style="font-size: 15px;">Smart Todo</span>
+          </div>
+          <div class="task-list" style="font-size: 14px; flex: 0;">
+            <div class="task-item" style="padding: 8px 12px;">
+              <div class="task-checkbox" style="width: 16px; height: 16px; min-width: 16px;"></div>
+              <div class="task-content">
+                <div class="task-title" style="font-size: 14px;">Pay electricity bill</div>
+              </div>
+            </div>
+          </div>
+          <div style="padding: 8px 12px;">
+            <div class="extraction-form" style="margin: 0; padding: 10px;">
+              <div class="extraction-field" style="padding: 6px 10px; margin-bottom: 6px;">
+                <span class="extraction-label" style="font-size: 11px;">Title</span>
+                <span class="extraction-value" style="font-size: 13px;">Book dentist for Olek</span>
+              </div>
+              <div class="extraction-field" style="padding: 6px 10px; margin-bottom: 6px;">
+                <span class="extraction-label" style="font-size: 11px;">Due</span>
+                <span class="extraction-value" style="font-size: 13px;">Next Monday</span>
+              </div>
+              <div class="add-field" style="font-size: 12px;">+ Add priority</div>
+              <div class="save-row" style="margin-top: 8px;">
+                <button class="save-btn" style="padding: 8px; font-size: 14px;">Save</button>
+                <button class="feedback-btn" style="width: 32px; height: 32px;">👍</button>
+                <button class="feedback-btn" style="width: 32px; height: 32px;">👎</button>
+              </div>
+            </div>
+          </div>
+          <div class="capture-input-container" style="padding: 8px 12px; margin-top: auto;">
+            <div style="font-size: 13px; color: var(--text-secondary); font-style: italic; background: var(--amber-100); border-radius: 8px; padding: 6px 10px; margin-bottom: 8px;">
+              "Book dentist for Olek next week"
+            </div>
+            <div class="capture-input-wrapper">
+              <input class="capture-input" placeholder="..." readonly style="font-size: 14px; padding: 10px 12px; opacity: 0.3;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center;">
+      <div style="font-size: 13px; font-weight: 500; color: var(--amber-500); margin-bottom: 8px;">5. SAVED ✓</div>
+      <div class="phone-frame" style="height: 520px; width: 260px; min-width: 260px; transform: scale(0.95);">
+        <div class="phone-notch" style="width: 100px;"></div>
+        <div class="phone-content">
+          <div class="app-header" style="padding: 8px 12px;">
+            <span class="app-logo" style="font-size: 15px;">Smart Todo</span>
+            <span class="app-count" style="font-size: 12px;">14</span>
+          </div>
+          <div class="task-list" style="font-size: 14px;">
+            <div class="section-header" style="font-size: 11px; padding: 10px 12px 4px;">Today · 3</div>
+            <div class="task-item" style="padding: 8px 12px;">
+              <div class="task-checkbox" style="width: 16px; height: 16px; min-width: 16px;"></div>
+              <div class="task-content">
+                <div class="task-title" style="font-size: 14px;">Pay electricity bill</div>
+                <div class="task-meta" style="font-size: 12px;">Due today</div>
+              </div>
+            </div>
+            <div class="section-header" style="font-size: 11px; padding: 10px 12px 4px;">This Week · 1</div>
+            <div class="task-item" style="padding: 8px 12px; background: var(--surface-extracted);">
+              <div class="task-checkbox" style="width: 16px; height: 16px; min-width: 16px;"></div>
+              <div class="task-content">
+                <div class="task-title" style="font-size: 14px;">Book dentist for Olek</div>
+                <div class="task-meta" style="font-size: 12px;">Next Monday · Family</div>
+              </div>
+            </div>
+          </div>
+          <div style="flex: 1;"></div>
+          <div class="capture-input-container" style="padding: 8px 12px;">
+            <div class="capture-input-wrapper">
+              <input class="capture-input" placeholder="Add a task..." readonly style="font-size: 14px; padding: 10px 36px 10px 12px;">
+              <button class="capture-submit" style="width: 28px; height: 28px; font-size: 12px;">→</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes" style="margin-top: 32px;">
+    <h3>The Five States of the Capture Loop</h3>
+    <ul>
+      <li><strong>IDLE:</strong> Task list visible, input ready at bottom with placeholder suggestion.</li>
+      <li><strong>TYPING:</strong> Keyboard up, input focused with amber ring, submit button activates.</li>
+      <li><strong>EXTRACTING:</strong> Input text moves to "before" display. Breathing shimmer appears in form area (only if >800ms). Conditional — fast extractions skip this state.</li>
+      <li><strong>EXTRACTED:</strong> Populated fields snap in (250ms). Raw input still visible as "before." Save button prominent. Feedback controls inline.</li>
+      <li><strong>SAVED:</strong> Task appears in list (optimistic). Input cleared. Cursor ready. New task has brief extracted tint that fades. Loop restarts.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.direction').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
