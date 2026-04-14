@@ -11,6 +11,9 @@ documentCounts:
   brainstorming: 0
   projectDocs: 0
 workflowType: 'prd'
+editHistory:
+  - date: '2026-04-14'
+    changes: 'Validation fixes (implementation leakage: Fastify→backend proxy, row-level security→server-enforced isolation) + Edit workflow (consolidated MVP scope list, FR24 tightened, FR28 deletion recovery, FR30 completed list growth constraint)'
 classification:
   projectType: Web App (SPA/PWA)
   domain: Personal Productivity (AI-Native)
@@ -57,7 +60,7 @@ This is a concept-validation MVP targeting 6 users (the creator + 5 friends), bu
 ### User Success
 
 - **Capture adoption:** 6 active users capturing tasks at least 4 days per week over 3 consecutive weeks
-- **Capture volume growth:** Average tasks captured per user trends upward week-over-week during the first 3 weeks, indicating users are capturing tasks they previously wouldn't have recorded
+- **Capture volume growth:** Average tasks captured per user trends upward week-over-week during the first 3 weeks, indicating users are capturing tasks they previously wouldn't have recorded. Validation must distinguish between tasks captured *faster* (efficiency gain) and tasks that *would not have been captured at all* without extraction (behavior change) — the latter is the primary signal
 - **Completion loop engagement:** Users active 2+ weeks show a growing ratio of completed-to-open tasks, with at least 10% week-over-week improvement in completion ratio after week 2
 - **Capture friction:** Time from seeing extracted fields to saved task is under 5 seconds — the form review step should feel like confirmation, not data entry
 
@@ -66,12 +69,13 @@ This is a concept-validation MVP targeting 6 users (the creator + 5 friends), bu
 - **Concept validation (quantitative):** At least 4 of 6 users meet the capture adoption threshold (4+ days/week for 3 consecutive weeks) without prompting or reminders
 - **Concept validation (qualitative):** At least 3 of the 5 invited friends independently express preference for Smart Todo over their previous task management method (or lack thereof) in unprompted feedback or structured check-in
 - **Behavior change signal:** At least 2 users report capturing tasks they would have previously kept in their head or forgotten entirely
-- **Go/no-go decision:** After the 3-week validation period, the quantitative and qualitative signals together determine whether to invest in building beyond MVP
+- **Go/no-go decision:** After the 3-week validation period, the quantitative and qualitative signals together determine whether to invest in building beyond MVP. At N=6, quantitative metrics are directional signals, not statistical proof — the go/no-go is fundamentally a qualitative judgment (did these people change their behavior and find it meaningful?) informed by numbers, not determined by them
 
 ### Technical Success
 
 - **LLM extraction latency:** Structured fields returned within 3 seconds (target for selected models). Hard degradation timeout at 5 seconds — if extraction hasn't returned, transition to manual form.
 - **Extraction accuracy:** LLM correctly identifies time, place, and priority without manual correction in at least 80% of inputs. Recurrence extraction accuracy expected to be lower initially; the editable form serves as the safety net.
+- **Correction effort:** When extraction requires manual correction, average correction time is under 3 seconds and fewer than 50% of corrections require editing more than one field. High accuracy with low correction effort preserves trust; repeated multi-field corrections erode confidence faster than single-field fixes.
 - **Graceful degradation:** When LLM is unavailable or exceeds 5s timeout, the manual form is presented without error states or broken UI — the fallback path must feel intentional, not broken.
 - **Data persistence:** Tasks persisted in Supabase PostgreSQL, accessible across devices and browser sessions. No data loss on browser clear or device switch.
 
@@ -83,6 +87,7 @@ This is a concept-validation MVP targeting 6 users (the creator + 5 friends), bu
 | Capture volume trend | Upward week-over-week (weeks 1–3) | Per-user task creation count |
 | Completion ratio growth | ≥10% WoW improvement after week 2 | Completed / open task ratio |
 | Extraction accuracy | ≥80% no-correction saves | Saves without field edits / total saves |
+| Correction effort | ≤3s avg correction time, <50% multi-field | Time-to-save on corrected tasks; field edit count per correction |
 | Extraction target latency | ≤3 seconds | API response timing (selected models) |
 | Extraction degradation timeout | 5 seconds | Hard cutoff to manual form |
 | Capture-to-save time | ≤5 seconds | Timestamp from extraction display to save |
@@ -92,21 +97,7 @@ This is a concept-validation MVP targeting 6 users (the creator + 5 friends), bu
 
 ### MVP - Minimum Viable Product
 
-- Passwordless magic link authentication via Supabase Auth
-- Quick capture via keyboard shortcut or persistent UI element with natural language input
-- LLM-powered extraction of title, due date/time, location, priority, and recurrence into editable structured form
-- One-click save after review/edit of extracted fields
-- Manual structured form as graceful degradation when LLM is unavailable or 5s timeout reached
-- Up to 3 user-created task groups for simple organization
-- Task completion tracking with visible completed tasks list (motivational surface)
-- Thumbs up/down extraction quality feedback mechanism
-- Considered empty state with suggested rich example input (first-use revelation)
-- Task persistence in Supabase PostgreSQL with row-level security (user isolation)
-- Responsive web design (mobile + desktop)
-- Containerized Node.js + Fastify backend proxy
-- OpenRouter LLM integration (production) + LM Studio support (development)
-- WCAG 2.1 AA accessibility from day one
-- "Powered by AI" transparency indicator
+The MVP delivers the complete capture-extract-review-save loop with enough surrounding infrastructure (auth, persistence, organization, completion tracking) to test the core hypothesis over 3 weeks with 6 users. See the **Must-Have Capabilities** table in Project Scoping for the authoritative itemized scope with rationale for each inclusion.
 
 ### Growth Features (Post-MVP)
 
@@ -306,8 +297,8 @@ The empty state must do more than say "Type a task above." To guarantee the firs
 ### Technical Architecture Considerations
 
 - **SPA framework:** Single-page application with client-side routing (if any routing needed — the MVP may be a single view with modal/overlay for capture). Framework selection is an architecture decision; see bundle size note above.
-- **Backend proxy:** Containerized **Node.js + Fastify** application serving as the API proxy between the SPA client and OpenRouter. Responsibilities: secure API key storage, extraction request forwarding, timeout management, and basic rate limiting to control API costs. Hosting decision (cloud VM, container service, serverless) deferred to architecture phase — the containerized approach keeps options open.
-- **Data persistence:** **Supabase** provides authentication (magic link), PostgreSQL database (task storage), and row-level security (user isolation). The SPA client uses the Supabase SDK for auth and direct database access. The Fastify proxy may verify Supabase auth tokens for extraction requests.
+- **Backend proxy:** Server-side application serving as the API proxy between the SPA client and OpenRouter. Responsibilities: secure API key storage, extraction request forwarding, timeout management, and basic rate limiting to control API costs. Technology choice (containerized server, edge functions, serverless) and framework selection deferred to architecture phase.
+- **Data persistence:** **Supabase** provides authentication (magic link), PostgreSQL database (task storage), and row-level security (user isolation). The SPA client uses the Supabase SDK for auth and direct database access. The backend proxy may verify Supabase auth tokens for extraction requests.
 - **API integration:** Standard REST calls from client to backend proxy, proxy to OpenRouter. No WebSocket or real-time infrastructure needed. The 3s target / 5s degradation timeout must account for proxy overhead.
 - **No SSR/SSG required:** No SEO concerns, no public content. Client-side rendering is sufficient.
 - **No landing page:** The app IS the product for MVP. Marketing/landing page deferred.
@@ -354,7 +345,7 @@ The empty state must do more than say "Type a task above." To guarantee the firs
 | Completed tasks view | Motivational surface — dopamine from visible progress |
 | Thumbs up/down extraction feedback | Validation data collection during 3-week test |
 | First-use empty state with suggested rich example | Guarantees first extraction demonstrates value |
-| Containerized Node.js + Fastify backend proxy | Production-grade infrastructure: API key management, request forwarding, timeout handling, rate limiting |
+| Backend API proxy for secure LLM provider integration | API key management, request forwarding, timeout handling, rate limiting — technology choice (containerized server, edge functions, serverless) deferred to architecture phase |
 | Responsive design (mobile + desktop) | Magda captures on phone, Daniel on desktop |
 | WCAG 2.1 AA accessibility | Hard requirement from day one |
 | "Powered by AI" transparency indicator | EU AI Act compliance |
@@ -363,7 +354,7 @@ The empty state must do more than say "Type a task above." To guarantee the firs
 
 | Feature | Reason for deferral | Phase |
 |---|---|---|
-| Recurring tasks | Users can re-create weekly tasks manually for 3-week validation. Annoying but not hypothesis-breaking | Phase 2 |
+| Recurring tasks | Users can re-create weekly tasks manually for 3-week validation. Annoying but not hypothesis-breaking. **Note:** absence of recurring tasks may suppress the "capture volume trending upward" metric — users may stop adding tasks they know they'll have to re-create next week. This should be accounted for when interpreting validation data | Phase 2 |
 | Offline persistence (IndexedDB + service worker) | MVP runs online-only. Graceful degradation handles timeout/error cases. Full local-first architecture is growth infrastructure | Phase 2 |
 | PWA installability | Depends on service worker; deferred with offline | Phase 2 |
 | Overdue task visual distinction | Nice-to-have; users can see due dates in the list | Phase 2 |
@@ -383,7 +374,7 @@ The empty state must do more than say "Type a task above." To guarantee the firs
 - *Learning needed:* Does capture volume actually increase week-over-week? Does the completion loop drive retention independently of extraction novelty?
 
 **Resource Risks:**
-- *Solo developer:* The scoped MVP is achievable for one developer in 3-5 weeks. The containerized Fastify proxy and WCAG compliance are the most time-consuming elements beyond the core extraction loop.
+- *Solo developer:* The scoped MVP is achievable for one developer in 3-5 weeks. The backend proxy and WCAG compliance are the most time-consuming elements beyond the core extraction loop.
 - *Absolute minimum cut:* If timeline pressure mounts, groups could be a single hardcoded set rather than user-created, and the feedback mechanism (thumbs up/down) could be a post-launch addition rather than a launch feature.
 
 ## Functional Requirements
@@ -393,13 +384,13 @@ The empty state must do more than say "Type a task above." To guarantee the firs
 - **FR1:** Users can log in via passwordless magic link sent to their email
 - **FR2:** Users can log out
 - **FR3:** User sessions persist across browser closes (users stay logged in until explicit logout)
-- **FR4:** Users see only their own tasks (enforced by row-level security)
+- **FR4:** Users see only their own tasks (server-enforced data isolation — no client-side filtering alone)
 
 ### Task Capture
 
 - **FR5:** Users can enter a task in natural language via a quick capture text input
 - **FR6:** Users can trigger the quick capture input via a keyboard shortcut
-- **FR7:** Users can access the quick capture input via a persistent UI element (e.g., floating action button or always-visible input field)
+- **FR7:** Users can access the quick capture input via a persistent UI element (e.g., floating action button or always-visible input field). The capture input must be visible immediately on load without scrolling on any breakpoint — it is the first thing the user sees and interacts with
 - **FR8:** Users can submit natural language input for LLM-powered extraction
 - **FR9:** Users see visual feedback indicating extraction is in progress after submitting natural language input
 - **FR10:** Users can view extracted structured fields (title, due date, due time, location, priority) in an editable form after submission
@@ -411,6 +402,7 @@ The empty state must do more than say "Type a task above." To guarantee the firs
 
 - **FR14:** Users are presented with a manual structured form when LLM extraction times out (5 seconds) or fails
 - **FR15:** The manual form pre-populates the title field with the user's raw input text
+- **FR15a:** The manual form may apply lightweight client-side parsing (e.g., regex-based date extraction, priority keyword matching) as a middle tier between full LLM extraction and a blank form — reducing the friction gap between the AI-assisted and manual paths. This is an implementation consideration, not a hard requirement.
 - **FR16:** Users can manually fill all task fields (title, due date, due time, location, priority) via the manual form
 - **FR17:** Users can save tasks via the manual form with the same one-click action as the extraction path
 
@@ -422,25 +414,25 @@ The empty state must do more than say "Type a task above." To guarantee the firs
 - **FR21:** Users can save tasks without assigning a group (ungrouped/inbox state)
 - **FR22:** Users can view tasks filtered by group
 - **FR23:** Users can view all tasks across groups in a unified list
-- **FR24:** Users can view tasks ordered by a meaningful default (e.g., due date, priority, or creation time)
+- **FR24:** The default task ordering surfaces urgent and due-soon tasks prominently (e.g., priority-weighted sort with due date as tiebreaker). The ordering must serve the "what should I do now?" need without requiring users to set precise metadata on every task. Tasks with no priority or due date remain visible but do not outrank explicitly prioritized items. Manual reordering is deferred to post-MVP
 
 ### Task Management
 
 - **FR25:** Users can view their list of open (incomplete) tasks
 - **FR26:** Users can view task details (title, due date, due time, location, priority, group)
 - **FR27:** Users can edit any field of an existing task
-- **FR28:** Users can delete a task
+- **FR28:** Users can delete a task. Deletion must include a recovery path (e.g., undo toast, confirmation dialog, or soft-delete with retention period) — specific pattern deferred to UX design, but accidental permanent loss on single tap is not acceptable
 
 ### Task Completion
 
 - **FR29:** Users can mark a task as complete
-- **FR30:** Users can view a list of completed tasks
+- **FR30:** Users can view a list of completed tasks. The list must remain performant and navigable as it grows over weeks of use — specific presentation (most recent N visible, collapsible by date, pagination) deferred to UX design, but an unbounded ever-growing flat list is not acceptable
 - **FR31:** Users can unmark a completed task (return to open)
 - **FR32:** Users can see the count of completed tasks
 
 ### Extraction Feedback
 
-- **FR33:** Users can provide thumbs up/down feedback on extraction quality after reviewing extracted fields
+- **FR33:** Users can provide thumbs up/down feedback on extraction quality after reviewing extracted fields. The feedback prompt should be prominently visible during the initial validation period and transition to appearing only after field corrections once extraction quality is established — preventing feedback fatigue while maintaining the optimization signal
 - **FR34:** The system records extraction feedback for analysis (correction rates, thumbs up/down signals)
 
 ### First-Use Experience
@@ -459,7 +451,7 @@ The empty state must do more than say "Type a task above." To guarantee the firs
 - **FR40:** The system supports OpenRouter as the LLM provider in production
 - **FR41:** The system supports LM Studio as the LLM provider in development
 - **FR42:** Switching between LLM providers requires only configuration changes, not code changes
-- **FR43:** The backend proxy manages API keys, request forwarding, and timeout enforcement without exposing secrets to the client
+- **FR43:** A server-side component manages API keys, request forwarding, and timeout enforcement without exposing secrets to the client
 
 ## Non-Functional Requirements
 
@@ -480,9 +472,9 @@ The empty state must do more than say "Type a task above." To guarantee the firs
 ### Security
 
 - **Authentication:** Passwordless magic link via Supabase Auth. No passwords stored or managed by the application.
-- **Session management:** Supabase handles session tokens and refresh. Sessions persist across browser closes (user stays logged in).
+- **Session management:** Supabase handles session tokens and refresh. Sessions persist across browser closes (user stays logged in). **iOS Safari risk:** Safari on iOS is known to clear cookies and site data under storage pressure or after extended periods of inactivity, which could silently expire sessions. This is a high-impact risk during the 3-week validation — a session that expires mid-capture breaks the habit loop. Implementation must verify session persistence behavior on iOS Safari and consider token refresh strategies that survive Safari's aggressive storage management.
 - **Row-level security:** Supabase RLS policies ensure users can only read and write their own tasks. No application-level authorization logic needed — the database enforces isolation.
-- **API key protection:** OpenRouter API key stored in the Fastify backend proxy environment. Never exposed to the client. Supabase service role key (if used server-side) also restricted to the proxy.
+- **API key protection:** OpenRouter API key stored in the server-side proxy environment. Never exposed to the client. Supabase service role key (if used server-side) also restricted to the proxy.
 - **Infrastructure access control:** IP whitelisting at the infrastructure level restricts access to known users during MVP validation.
 - **Transport encryption:** All traffic over HTTPS. Supabase enforces TLS for database connections.
 - **No sensitive data in client storage:** Auth tokens managed by Supabase SDK. No API keys, no credentials in localStorage or IndexedDB.
@@ -501,9 +493,9 @@ The empty state must do more than say "Type a task above." To guarantee the firs
 ### Integration
 
 - **Supabase:** Auth (magic link), PostgreSQL database (task persistence), Row-Level Security (user isolation). Supabase client SDK in the SPA for auth and direct database access.
-- **OpenRouter (production):** LLM extraction via REST API through Fastify proxy. Structured output with JSON Schema enforcement. Provider filtering for no-training policy.
+- **OpenRouter (production):** LLM extraction via REST API through the backend proxy. Structured output with JSON Schema enforcement. Provider filtering for no-training policy.
 - **LM Studio (development):** Local LLM inference for zero-cost development. Same API contract as OpenRouter — provider switching via configuration only.
-- **Provider abstraction:** The Fastify proxy abstracts LLM provider differences. The SPA client calls a single extraction endpoint; the proxy routes to OpenRouter or LM Studio based on environment configuration.
+- **Provider abstraction:** The backend proxy abstracts LLM provider differences. The SPA client calls a single extraction endpoint; the proxy routes to OpenRouter or LM Studio based on environment configuration.
 
 ### Reliability
 
