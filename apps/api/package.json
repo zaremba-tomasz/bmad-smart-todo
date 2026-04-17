@@ -1,0 +1,28 @@
+{
+  "name": "@smart-todo/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@smart-todo/shared": "workspace:*",
+    "@fastify/rate-limit": "10.3.0",
+    "@supabase/supabase-js": "2.103.3",
+    "fastify": "5.8.5",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@smart-todo/config": "workspace:*",
+    "@types/node": "24.12.2",
+    "eslint": "9.39.4",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

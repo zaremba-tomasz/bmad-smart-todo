@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: optional;
+  src: url("/fonts/inter-variable.woff2") format("woff2");
+}
+
+@theme {
+  /* Colors */
+  --color-surface: #FDFBF7;
+  --color-surface-raised: #FFFFFF;
+  --color-surface-completed: #FEF6E8;
+  --color-surface-extracted: #FEFDF5;
+
+  --color-text-primary: #1C1917;
+  --color-text-secondary: #78716C;
+  --color-text-tertiary: #A8A29E;
+
+  --color-coral-100: #FFE4DE;
+  --color-coral-500: #FF6B4A;
+  --color-coral-600: #E5553A;
+
+  --color-amber-100: #FEF3C7;
+  --color-amber-400: #FBBF24;
+  --color-amber-500: #F59E0B;
+  --color-amber-900: #78350F;
+
+  --color-border-default: #E7E5E4;
+  --color-border-focus: #D6D3D1;
+  --color-ring-focus: #F59E0B;
+
+  /* Spacing (4px base unit) */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-7: 28px;
+  --spacing-8: 32px;
+
+  /* Animation tokens */
+  --duration-snap: 100ms;
+  --duration-reveal: 250ms;
+  --duration-settle: 300ms;
+  --duration-breathe: 2s;
+  --duration-relocate: 400ms;
+
+  /* Typography */
+  --font-weight-loud: 600;
+  --font-size-loud: 1.0625rem;
+  --line-height-loud: 1.35;
+  --font-weight-quiet: 400;
+  --font-size-quiet: 0.875rem;
+  --line-height-quiet: 1.45;
+  --font-weight-input: 400;
+  --font-size-input: 1rem;
+  --line-height-input: 1.5;
+
+  /* Font family */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  margin: 0;
+}

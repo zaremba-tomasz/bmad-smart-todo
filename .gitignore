@@ -1,19 +1,26 @@
-# Dependencies
 node_modules/
-
-# Build output
-dist/
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# pnpm
 .pnpm-store/
+dist/
+.turbo/
+*.local
+.env
+.env.*
+!.env.example
 
-# macOS
-.DS_Store
-
-# JetBrains IDEs
+# IDE
 .idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+*.tsbuildinfo
+
+# Test
+coverage/
+test-results/
+playwright-report/

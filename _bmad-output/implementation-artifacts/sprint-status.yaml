@@ -1,0 +1,80 @@
+# generated: 2026-04-16
+# last_updated: 2026-04-17
+# project: todo-app-bmad-training
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: {project-root}/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-04-16
+last_updated: 2026-04-17
+project: todo-app-bmad-training
+project_key: NOKEY
+tracking_system: file-system
+story_location: "{project-root}/_bmad-output/implementation-artifacts"
+
+development_status:
+  # Epic 1: Project Foundation & User Authentication
+  epic-1: in-progress
+  1-1-monorepo-scaffold-and-shared-packages: done
+  1-2-database-schema-and-auth-configuration: backlog
+  1-3-user-login-and-session-management: backlog
+  1-4-authenticated-app-shell-with-responsive-layout: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Smart Task Capture & Core Loop
+  epic-2: backlog
+  2-1-task-crud-api-and-basic-store: backlog
+  2-2-optimistic-data-layer-and-sync-resilience: backlog
+  2-3-basic-task-list-and-empty-state: backlog
+  2-4-task-completion-flow: backlog
+  2-5-llm-provider-abstraction-and-extraction-api: backlog
+  2-6-capture-input-component: backlog
+  2-7-extraction-form-and-review-flow: backlog
+  2-8-graceful-degradation-and-manual-form: backlog
+  2-9-rapid-capture-pin-prompt-and-ai-transparency: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Task List Experience & Management
+  epic-3: backlog
+  3-1-temporal-grouping-and-smart-sorting: backlog
+  3-2-full-completed-section-with-temporal-framing: backlog
+  3-3-task-detail-view-and-inline-editing: backlog
+  3-4-task-deletion-with-recovery: backlog
+  3-5-extraction-feedback-and-telemetry: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Task Organization
+  epic-4: backlog
+  4-1-group-crud-api-and-store: backlog
+  4-2-group-management-ui: backlog
+  4-3-group-assignment-and-filtering: backlog
+  epic-4-retrospective: optional

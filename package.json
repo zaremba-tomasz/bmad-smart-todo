@@ -1,0 +1,16 @@
+{
+  "name": "smart-todo",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:e2e": "turbo test:e2e"
+  },
+  "devDependencies": {
+    "turbo": "2.9.6"
+  },
+  "packageManager": "pnpm@10.15.0"
+}
