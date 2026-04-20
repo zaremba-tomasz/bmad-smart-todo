@@ -32,6 +32,9 @@
   --color-border-focus: #D6D3D1;
   --color-ring-focus: #F59E0B;
 
+  --color-shimmer-base: #F5F5F4;
+  --color-shimmer-highlight: #FAFAF9;
+
   /* Spacing (4px base unit) */
   --spacing-1: 4px;
   --spacing-2: 8px;
@@ -61,7 +64,7 @@
   --line-height-input: 1.5;
 
   /* Font family */
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 body {

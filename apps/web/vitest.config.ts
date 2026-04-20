@@ -6,6 +6,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [svelte({ hot: false })],
   resolve: {
+    conditions: ['browser'],
     alias: {
       $lib: path.resolve('./src/lib'),
     },

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getLoginErrorMessage } from '$lib/auth-errors'
+  import AppLayout from '$lib/components/AppLayout.svelte'
   import { authStore } from '$lib/stores/auth-store.svelte'
 
   authStore.init()
@@ -42,19 +43,7 @@
     <p class="text-text-secondary">Loading…</p>
   </main>
 {:else if authStore.user}
-  <main class="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
-    <div class="text-center">
-      <h1 class="text-2xl font-semibold text-text-primary">Smart Todo</h1>
-      <p class="mt-2 text-text-secondary">Welcome, {authStore.user.email}</p>
-    </div>
-    <button
-      type="button"
-      onclick={handleLogout}
-      class="rounded-lg border border-border-default px-6 py-3 text-text-secondary transition-colors hover:border-border-focus hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-500"
-    >
-      Sign out
-    </button>
-  </main>
+  <AppLayout user={authStore.user} onLogout={handleLogout} />
 {:else}
   <main class="flex min-h-screen items-center justify-center p-6">
     <div class="w-full max-w-sm">
