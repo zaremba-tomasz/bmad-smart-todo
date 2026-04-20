@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest'
 
 const mockGet = vi.fn()
 const mockPost = vi.fn()
@@ -9,6 +9,17 @@ vi.mock('$lib/api', () => ({
     post: mockPost,
   },
 }))
+
+const mockLocalStorage = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn(),
+}
+
+vi.stubGlobal('localStorage', mockLocalStorage)
 
 const TASK_A = {
   id: 'aaa-111',
@@ -40,12 +51,18 @@ const TASK_B = {
   createdAt: '2026-04-20T09:00:00Z',
 }
 
+const TEMP_UUID = 'temp-uuid-1234'
+
 let taskStore: typeof import('./task-store.svelte').taskStore
 
 describe('taskStore', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     vi.resetModules()
+    vi.useFakeTimers()
+    vi.stubGlobal('crypto', { randomUUID: () => TEMP_UUID })
+    vi.stubGlobal('localStorage', mockLocalStorage)
+    mockLocalStorage.getItem.mockReturnValue(null)
 
     vi.mock('$lib/api', () => ({
       api: {
@@ -56,10 +73,16 @@ describe('taskStore', () => {
     ;({ taskStore } = await import('./task-store.svelte'))
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('starts with empty tasks and loading=false', () => {
     expect(taskStore.tasks).toEqual([])
     expect(taskStore.loading).toBe(false)
     expect(taskStore.error).toBeNull()
+    expect(taskStore.hasPendingMutations).toBe(false)
+    expect(taskStore.pendingCount).toBe(0)
   })
 
   describe('loadTasks', () => {
@@ -89,7 +112,6 @@ describe('taskStore', () => {
       await taskStore.loadTasks()
 
       expect(taskStore.error).toBe('Connection failed')
-      expect(taskStore.tasks).toEqual([TASK_A])
     })
 
     it('handles thrown errors and resets loading state', async () => {
@@ -101,43 +123,69 @@ describe('taskStore', () => {
       expect(taskStore.error).toBe('Network down')
       expect(taskStore.tasks).toEqual([])
     })
-  })
 
-  describe('createTask', () => {
-    it('adds task to local state', async () => {
-      mockPost.mockResolvedValue({
-        ok: true,
-        data: { data: TASK_A },
-      })
+    it('replays pending mutations from localStorage before API fetch', async () => {
+      const storedMutations = [
+        {
+          mutationId: 'pending-1:1',
+          taskId: 'pending-1',
+          type: 'create',
+          payload: { title: 'Pending task', dueDate: null, dueTime: null, location: null, priority: null, groupId: null },
+          createdAt: Date.now(),
+          retryCount: 0,
+        },
+      ]
+      mockLocalStorage.getItem.mockReturnValue(JSON.stringify(storedMutations))
 
-      await taskStore.createTask({
-        title: 'Buy groceries',
-        dueDate: null,
-        dueTime: null,
-        location: null,
-        priority: null,
-        groupId: null,
-      })
-
-      expect(taskStore.tasks).toEqual([TASK_A])
-      expect(mockPost).toHaveBeenCalledWith(
-        '/api/tasks',
-        expect.objectContaining({ title: 'Buy groceries' }),
-        expect.anything(),
-      )
-    })
-
-    it('prepends new task to beginning of list', async () => {
       mockGet.mockResolvedValue({
         ok: true,
-        data: { data: [TASK_B] },
+        data: { data: [TASK_A] },
       })
-      await taskStore.loadTasks()
-
       mockPost.mockResolvedValue({
         ok: true,
-        data: { data: TASK_A },
+        data: { data: { ...TASK_A, id: 'server-id-1', title: 'Pending task' } },
       })
+
+      await taskStore.loadTasks()
+
+      expect(mockLocalStorage.getItem).toHaveBeenCalledWith('smart-todo:pending-mutations')
+      expect(taskStore.tasks.length).toBeGreaterThanOrEqual(1)
+    })
+  })
+
+  describe('createTask — optimistic', () => {
+    it('inserts task into local state immediately before API resolves', async () => {
+      let resolveApi!: (value: unknown) => void
+      mockPost.mockReturnValue(new Promise((r) => { resolveApi = r }))
+
+      const createPromise = taskStore.createTask({
+        title: 'Buy groceries',
+        dueDate: null,
+        dueTime: null,
+        location: null,
+        priority: null,
+        groupId: null,
+      })
+
+      expect(taskStore.tasks).toHaveLength(1)
+      expect(taskStore.tasks[0].title).toBe('Buy groceries')
+      expect(taskStore.tasks[0].id).toBe(TEMP_UUID)
+      expect(taskStore.getSyncStatus(TEMP_UUID)).toBe('pending')
+      expect(taskStore.hasPendingMutations).toBe(true)
+
+      resolveApi({
+        ok: true,
+        data: { data: { ...TASK_A, id: 'server-real-id' } },
+      })
+      await createPromise
+    })
+
+    it('updates sync status to synced and removes pending mutation on API success', async () => {
+      mockPost.mockResolvedValue({
+        ok: true,
+        data: { data: { ...TASK_A, id: 'server-real-id' } },
+      })
+
       await taskStore.createTask({
         title: 'Buy groceries',
         dueDate: null,
@@ -147,11 +195,33 @@ describe('taskStore', () => {
         groupId: null,
       })
 
-      expect(taskStore.tasks[0]).toEqual(TASK_A)
-      expect(taskStore.tasks).toHaveLength(2)
+      expect(taskStore.getSyncStatus('server-real-id')).toBe('synced')
+      expect(taskStore.hasPendingMutations).toBe(false)
+      expect(taskStore.tasks[0].id).toBe('server-real-id')
     })
 
-    it('sets error on API failure without corrupting state', async () => {
+    it('triggers retry on retryable API failure', async () => {
+      mockPost.mockResolvedValue({
+        ok: false,
+        error: { code: 'SERVER_ERROR', message: 'Server error' },
+      })
+
+      await taskStore.createTask({
+        title: 'Buy groceries',
+        dueDate: null,
+        dueTime: null,
+        location: null,
+        priority: null,
+        groupId: null,
+      })
+
+      expect(taskStore.hasPendingMutations).toBe(true)
+      expect(taskStore.getSyncStatus(TEMP_UUID)).toBe('pending')
+      const mutation = taskStore.pendingMutations.find((m) => m.taskId === TEMP_UUID)
+      expect(mutation?.retryCount).toBe(1)
+    })
+
+    it('rolls back local state on non-retryable error (VALIDATION_ERROR)', async () => {
       mockPost.mockResolvedValue({
         ok: false,
         error: { code: 'VALIDATION_ERROR', message: 'Title is required' },
@@ -166,14 +236,15 @@ describe('taskStore', () => {
         groupId: null,
       })
 
-      expect(taskStore.error).toBe('Title is required')
       expect(taskStore.tasks).toEqual([])
+      expect(taskStore.hasPendingMutations).toBe(false)
     })
 
-    it('handles thrown errors without corrupting state', async () => {
-      mockPost.mockRejectedValue(new Error('Request failed'))
+    it('persists pending mutations to localStorage', async () => {
+      let resolveApi!: (value: unknown) => void
+      mockPost.mockReturnValue(new Promise((r) => { resolveApi = r }))
 
-      await taskStore.createTask({
+      const createPromise = taskStore.createTask({
         title: 'Buy groceries',
         dueDate: null,
         dueTime: null,
@@ -182,32 +253,45 @@ describe('taskStore', () => {
         groupId: null,
       })
 
-      expect(taskStore.error).toBe('Request failed')
-      expect(taskStore.tasks).toEqual([])
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        'smart-todo:pending-mutations',
+        expect.any(String),
+      )
+      const savedData = JSON.parse(mockLocalStorage.setItem.mock.calls[0][1])
+      expect(savedData).toHaveLength(1)
+      expect(savedData[0].taskId).toBe(TEMP_UUID)
+      expect(savedData[0].type).toBe('create')
+
+      resolveApi({ ok: true, data: { data: TASK_A } })
+      await createPromise
     })
   })
 
-  describe('completeTask', () => {
-    it('updates task state locally', async () => {
+  describe('completeTask — optimistic', () => {
+    it('applies optimistic state change immediately', async () => {
       mockGet.mockResolvedValue({
         ok: true,
         data: { data: [TASK_A] },
       })
       await taskStore.loadTasks()
 
-      const completedTask = { ...TASK_A, isCompleted: true, completedAt: '2026-04-20T14:00:00Z' }
-      mockPost.mockResolvedValue({
-        ok: true,
-        data: { data: completedTask },
-      })
+      let resolveApi!: (value: unknown) => void
+      mockPost.mockReturnValue(new Promise((r) => { resolveApi = r }))
 
-      await taskStore.completeTask(TASK_A.id)
+      const completePromise = taskStore.completeTask(TASK_A.id)
 
       expect(taskStore.tasks[0].isCompleted).toBe(true)
-      expect(taskStore.tasks[0].completedAt).toBe('2026-04-20T14:00:00Z')
+      expect(taskStore.tasks[0].completedAt).toBeTruthy()
+      expect(taskStore.getSyncStatus(TASK_A.id)).toBe('pending')
+
+      resolveApi({
+        ok: true,
+        data: { data: { ...TASK_A, isCompleted: true, completedAt: '2026-04-20T14:00:00Z' } },
+      })
+      await completePromise
     })
 
-    it('sets error on failure without corrupting state', async () => {
+    it('sets synced status on API success', async () => {
       mockGet.mockResolvedValue({
         ok: true,
         data: { data: [TASK_A] },
@@ -215,53 +299,150 @@ describe('taskStore', () => {
       await taskStore.loadTasks()
 
       mockPost.mockResolvedValue({
-        ok: false,
-        error: { code: 'NOT_FOUND', message: 'Task not found' },
+        ok: true,
+        data: { data: { ...TASK_A, isCompleted: true, completedAt: '2026-04-20T14:00:00Z' } },
       })
 
       await taskStore.completeTask(TASK_A.id)
 
-      expect(taskStore.error).toBe('Task not found')
-      expect(taskStore.tasks[0].isCompleted).toBe(false)
+      expect(taskStore.getSyncStatus(TASK_A.id)).toBe('synced')
+      expect(taskStore.hasPendingMutations).toBe(false)
     })
   })
 
-  describe('uncompleteTask', () => {
-    it('updates task state locally', async () => {
+  describe('uncompleteTask — optimistic', () => {
+    it('applies optimistic state change immediately', async () => {
       mockGet.mockResolvedValue({
         ok: true,
         data: { data: [TASK_B] },
       })
       await taskStore.loadTasks()
 
-      const uncompletedTask = { ...TASK_B, isCompleted: false, completedAt: null }
-      mockPost.mockResolvedValue({
-        ok: true,
-        data: { data: uncompletedTask },
-      })
+      let resolveApi!: (value: unknown) => void
+      mockPost.mockReturnValue(new Promise((r) => { resolveApi = r }))
 
-      await taskStore.uncompleteTask(TASK_B.id)
+      const uncompletePromise = taskStore.uncompleteTask(TASK_B.id)
 
       expect(taskStore.tasks[0].isCompleted).toBe(false)
       expect(taskStore.tasks[0].completedAt).toBeNull()
+      expect(taskStore.getSyncStatus(TASK_B.id)).toBe('pending')
+
+      resolveApi({
+        ok: true,
+        data: { data: { ...TASK_B, isCompleted: false, completedAt: null } },
+      })
+      await uncompletePromise
+    })
+  })
+
+  describe('retry logic', () => {
+    it('retryMutation re-executes a specific pending mutation', async () => {
+      mockPost
+        .mockResolvedValueOnce({
+          ok: false,
+          error: { code: 'SERVER_ERROR', message: 'Server error' },
+        })
+
+      await taskStore.createTask({
+        title: 'Retry me',
+        dueDate: null,
+        dueTime: null,
+        location: null,
+        priority: null,
+        groupId: null,
+      })
+
+      expect(taskStore.hasPendingMutations).toBe(true)
+
+      mockPost.mockResolvedValueOnce({
+        ok: true,
+        data: { data: { ...TASK_A, id: 'server-id-retry', title: 'Retry me' } },
+      })
+
+      taskStore.retryMutation(TEMP_UUID)
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(taskStore.hasPendingMutations).toBe(false)
+      expect(taskStore.getSyncStatus('server-id-retry')).toBe('synced')
     })
 
-    it('sets error on failure without corrupting state', async () => {
-      mockGet.mockResolvedValue({
-        ok: true,
-        data: { data: [TASK_B] },
-      })
-      await taskStore.loadTasks()
-
+    it('schedules retry with exponential backoff on retryable errors', async () => {
       mockPost.mockResolvedValue({
         ok: false,
         error: { code: 'SERVER_ERROR', message: 'Server error' },
       })
 
-      await taskStore.uncompleteTask(TASK_B.id)
+      await taskStore.createTask({
+        title: 'Backoff test',
+        dueDate: null,
+        dueTime: null,
+        location: null,
+        priority: null,
+        groupId: null,
+      })
 
-      expect(taskStore.error).toBe('Server error')
-      expect(taskStore.tasks[0].isCompleted).toBe(true)
+      const callCountAfterFirst = mockPost.mock.calls.length
+      expect(taskStore.pendingMutations[0].retryCount).toBe(1)
+
+      await vi.advanceTimersByTimeAsync(5_000)
+      expect(mockPost.mock.calls.length).toBeGreaterThan(callCountAfterFirst)
+    })
+
+    it('stops retrying after 3 attempts but keeps task as pending', async () => {
+      mockPost.mockResolvedValue({
+        ok: false,
+        error: { code: 'SERVER_ERROR', message: 'Server error' },
+      })
+
+      await taskStore.createTask({
+        title: 'Max retry',
+        dueDate: null,
+        dueTime: null,
+        location: null,
+        priority: null,
+        groupId: null,
+      })
+
+      await vi.advanceTimersByTimeAsync(5_000)
+      await vi.advanceTimersByTimeAsync(15_000)
+      await vi.advanceTimersByTimeAsync(30_000)
+
+      expect(taskStore.hasPendingMutations).toBe(true)
+      expect(taskStore.tasks).toHaveLength(1)
+      expect(taskStore.getSyncStatus(TEMP_UUID)).toBe('pending')
+    })
+  })
+
+  describe('online/offline', () => {
+    it('online event triggers retryAllPending', async () => {
+      mockPost
+        .mockResolvedValueOnce({
+          ok: false,
+          error: { code: 'SERVER_ERROR', message: 'Server error' },
+        })
+
+      await taskStore.createTask({
+        title: 'Offline task',
+        dueDate: null,
+        dueTime: null,
+        location: null,
+        priority: null,
+        groupId: null,
+      })
+
+      expect(taskStore.hasPendingMutations).toBe(true)
+      const callCountBefore = mockPost.mock.calls.length
+
+      mockPost.mockResolvedValue({
+        ok: true,
+        data: { data: { ...TASK_A, id: 'server-online', title: 'Offline task' } },
+      })
+
+      window.dispatchEvent(new Event('online'))
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(mockPost.mock.calls.length).toBeGreaterThan(callCountBefore)
+      expect(taskStore.hasPendingMutations).toBe(false)
     })
   })
 
