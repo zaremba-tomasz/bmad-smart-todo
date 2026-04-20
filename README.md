@@ -14,11 +14,12 @@ A smart todo application built with Svelte 5, Fastify, and Supabase in a Turbore
 # Install dependencies
 pnpm install
 
-# Start local Supabase (requires Docker — applies migrations automatically)
-pnpm supabase start
+# Start everything (Supabase + dev servers) with one command
+pnpm dev:full
 
-# Start development servers (web on :5173, api on :3001)
-pnpm dev
+# Or start services separately:
+pnpm supabase start   # Local Supabase (requires Docker, applies migrations)
+pnpm dev              # Dev servers only (web on :5173, api on :3001)
 
 # Run all tests
 pnpm test
@@ -32,6 +33,8 @@ pnpm lint
 # Build all packages
 pnpm build
 ```
+
+`pnpm dev:full` checks if Supabase is already running and starts it if needed, then launches the Vite and Fastify dev servers via Turborepo.
 
 ## Local Supabase
 
@@ -67,6 +70,22 @@ pnpm supabase db diff --schema public
 
 Magic link emails sent during local development are captured by Inbucket.
 Open http://localhost:54324 to view them and click the magic link.
+
+### Testing Auth Locally with Inbucket
+
+Local Supabase captures all outgoing emails (magic links) in Inbucket instead of sending them to real inboxes.
+
+1. Open the app at `http://localhost:5173`
+2. Enter any email address on the login form and submit
+3. Open Inbucket at `http://localhost:54324`
+4. Find the magic link email in the inbox for that address
+5. Click the magic link — you'll be authenticated and redirected to the app
+
+Inbucket resets on `supabase stop`. Any email address works locally — the production email allowlist is not enforced in local dev.
+
+For programmatic access (E2E tests), the Inbucket API is available:
+- `GET http://localhost:54324/api/v1/mailbox/{email}` — list messages
+- `GET http://localhost:54324/api/v1/mailbox/{email}/{id}` — read a message
 
 ### Database Schema
 
