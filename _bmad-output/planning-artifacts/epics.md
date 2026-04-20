@@ -914,6 +914,37 @@ So that I can dump all my thoughts quickly, retain easy access, and trust the sy
 **When** tasks exist in my list
 **Then** the browser tab title shows "N tasks · Smart Todo" where N is the count of open tasks (UX-DR18)
 
+### Story 2.10: End-to-End Test Suite
+
+As a developer,
+I want automated E2E tests covering the core user journeys,
+So that regressions are caught before deployment and the CI pipeline's E2E gate is functional.
+
+**Acceptance Criteria:**
+
+**Given** the E2E test infrastructure exists (Playwright, @smart-todo/e2e workspace)
+**When** I run the E2E test suite
+**Then** the following user journeys are covered:
+- Auth flow: magic link login, session persistence, logout
+- Capture loop: type natural language → extraction form → review → save → task appears in list
+- Manual fallback: timeout/error → manual form → save → task appears
+- Task completion: mark complete (animation visible), unmark, completed count updates
+- Task list: empty state on first load, tasks render with metadata, sort order correct
+- Accessibility: axe-core scan passes WCAG 2.1 AA on all primary views (empty state, task list, extraction form, manual form)
+
+**Given** the E2E tests run in CI
+**When** the pipeline executes
+**Then** `turbo test:e2e` runs Playwright against a running SPA + API
+**And** the CI E2E gate blocks merge on any test failure
+**And** the accessibility gate blocks merge on any WCAG 2.1 AA violation
+
+**Given** the tests need a running backend
+**When** Playwright starts
+**Then** `playwright.config.ts` uses `webServer` to start both apps/web and apps/api before tests
+**And** test data is seeded or created via API calls within tests (no shared mutable fixtures)
+
+**Note:** This story covers Epic 2 journeys only. Epic 3 (task editing, deletion, temporal grouping) and Epic 4 (groups, filtering) E2E tests will be added to their respective epics.
+
 ## Epic 3: Task List Experience & Management
 
 The list becomes a real tool. Temporal sorting surfaces what's due today. The full completed section shows progress with temporal framing ("3 today, 14 this week"). Users can view task details, edit any field, and delete tasks with a recovery path. Extraction quality feedback (thumbs up/down) enables validation-period optimization.

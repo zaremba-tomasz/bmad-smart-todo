@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/svelte'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockLoadTasks = vi.fn()
+const mockTasks = vi.fn()
 const mockOpenTasks = vi.fn()
 const mockCompletedCount = vi.fn()
 const mockLoading = vi.fn()
@@ -20,6 +21,7 @@ vi.mock('$lib/stores/task-store.svelte', () => ({
     uncompleteTask: (...args: unknown[]) => mockUncompleteTask(...args),
     getSyncStatus: (...args: unknown[]) => mockGetSyncStatus(...args),
     retryMutation: (...args: unknown[]) => mockRetryMutation(...args),
+    get tasks() { return mockTasks() },
     get openTasks() { return mockOpenTasks() },
     get completedCount() { return mockCompletedCount() },
     get loading() { return mockLoading() },
@@ -41,6 +43,7 @@ const mockUser = {
 }
 
 function setupDefaults() {
+  mockTasks.mockReturnValue([])
   mockOpenTasks.mockReturnValue([])
   mockCompletedCount.mockReturnValue(0)
   mockLoading.mockReturnValue(false)
@@ -126,8 +129,7 @@ describe('AppLayout', () => {
   })
 
   it('shows EmptyState when no tasks exist and not loading', () => {
-    mockOpenTasks.mockReturnValue([])
-    mockCompletedCount.mockReturnValue(0)
+    mockTasks.mockReturnValue([])
     mockLoading.mockReturnValue(false)
 
     render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
@@ -154,7 +156,7 @@ describe('AppLayout', () => {
   })
 
   it('shows TaskList when tasks exist', () => {
-    mockOpenTasks.mockReturnValue([
+    mockTasks.mockReturnValue([
       {
         id: 't1',
         userId: 'u1',
@@ -179,13 +181,28 @@ describe('AppLayout', () => {
   })
 
   it('shows TaskList with completed count when only completed tasks exist', () => {
-    mockOpenTasks.mockReturnValue([])
-    mockCompletedCount.mockReturnValue(3)
+    mockTasks.mockReturnValue([
+      {
+        id: 't1',
+        userId: 'u1',
+        title: 'Done Task',
+        dueDate: null,
+        dueTime: null,
+        location: null,
+        priority: null,
+        groupId: null,
+        isCompleted: true,
+        completedAt: '2026-04-19T10:00:00Z',
+        deletedAt: null,
+        createdAt: '2026-04-18T10:00:00Z',
+      },
+    ])
+    mockCompletedCount.mockReturnValue(1)
     mockLoading.mockReturnValue(false)
 
     render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
     expect(screen.queryByText('Your task list is clear.')).toBeNull()
-    expect(screen.getByText('3')).toBeTruthy()
+    expect(screen.getByText('1')).toBeTruthy()
     expect(screen.getByText('completed')).toBeTruthy()
   })
 })

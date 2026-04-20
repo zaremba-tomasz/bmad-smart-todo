@@ -39,14 +39,14 @@
 </script>
 
 <div
-  class="task-item flex items-center gap-2 border-b border-border-default py-3 animate-[fadeIn_200ms_ease-out] motion-reduce:animate-none"
+  class="task-item flex items-center gap-2 border-b border-border-default py-3 animate-[fadeIn_200ms_ease-out] motion-reduce:animate-none transition-colors duration-settle ease-in-out motion-reduce:transition-none"
   class:bg-surface-completed={task.isCompleted}
 >
   <div class="flex min-h-[44px] min-w-[44px] items-center justify-center">
     <Checkbox.Root
       checked={task.isCompleted}
       onCheckedChange={handleCheckedChange}
-      class="flex h-5 w-5 items-center justify-center rounded border-2 transition-colors motion-reduce:transition-none
+      class="flex h-5 w-5 items-center justify-center rounded border-2 transition-colors duration-settle ease-in-out motion-reduce:transition-none
         {task.isCompleted ? 'border-amber-500 bg-amber-500' : 'border-border-default hover:border-border-focus'}"
       aria-label="Mark {task.title} as {task.isCompleted ? 'incomplete' : 'complete'}"
     >
@@ -61,7 +61,7 @@
   </div>
 
   <div class="min-w-0 flex-1">
-    <p class="text-[length:var(--font-size-loud)] font-[number:var(--font-weight-loud)] leading-[var(--line-height-loud)] {task.isCompleted ? 'text-text-tertiary' : 'text-text-primary'}">
+    <p class="text-[length:var(--font-size-loud)] font-[number:var(--font-weight-loud)] leading-[var(--line-height-loud)] transition-colors duration-settle ease-in-out motion-reduce:transition-none {task.isCompleted ? 'text-text-tertiary' : 'text-text-primary'}">
       {task.title}
     </p>
 

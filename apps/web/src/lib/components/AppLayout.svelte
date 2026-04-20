@@ -86,11 +86,11 @@
             Retry
           </button>
         </div>
-      {:else if taskStore.openTasks.length === 0 && taskStore.completedCount === 0}
+      {:else if taskStore.tasks.length === 0}
         <EmptyState />
       {:else}
         <TaskList
-          tasks={taskStore.openTasks}
+          tasks={taskStore.tasks}
           completedCount={taskStore.completedCount}
           onComplete={(id) => taskStore.completeTask(id)}
           onUncomplete={(id) => taskStore.uncompleteTask(id)}

@@ -228,4 +228,65 @@ describe('TaskItem', () => {
     expect(screen.getByText('Buy groceries')).toBeTruthy()
     expect(screen.queryByText('·')).toBeNull()
   })
+
+  it('completed task background has CSS transition classes', () => {
+    const { container } = render(TaskItem, {
+      props: {
+        task: makeTask({ isCompleted: true, completedAt: '2026-04-19T10:00:00Z' }),
+        onComplete: vi.fn(),
+        onUncomplete: vi.fn(),
+      },
+    })
+
+    const taskItem = container.querySelector('.task-item')
+    expect(taskItem?.className).toContain('transition-colors')
+    expect(taskItem?.className).toContain('duration-settle')
+  })
+
+  it('completed checkbox has CSS transition classes on border/background', () => {
+    render(TaskItem, {
+      props: {
+        task: makeTask({ isCompleted: true, completedAt: '2026-04-19T10:00:00Z' }),
+        onComplete: vi.fn(),
+        onUncomplete: vi.fn(),
+      },
+    })
+
+    const checkbox = screen.getByRole('checkbox')
+    expect(checkbox.className).toContain('transition-colors')
+    expect(checkbox.className).toContain('duration-settle')
+  })
+
+  it('completed title text has CSS transition on color', () => {
+    render(TaskItem, {
+      props: {
+        task: makeTask({ isCompleted: true, completedAt: '2026-04-19T10:00:00Z' }),
+        onComplete: vi.fn(),
+        onUncomplete: vi.fn(),
+      },
+    })
+
+    const title = screen.getByText('Buy groceries')
+    expect(title.className).toContain('transition-colors')
+    expect(title.className).toContain('duration-settle')
+  })
+
+  it('motion-reduce:transition-none is present on transitioning elements', () => {
+    const { container } = render(TaskItem, {
+      props: {
+        task: makeTask(),
+        onComplete: vi.fn(),
+        onUncomplete: vi.fn(),
+      },
+    })
+
+    const taskItem = container.querySelector('.task-item')
+    expect(taskItem?.className).toContain('motion-reduce:transition-none')
+
+    const checkbox = screen.getByRole('checkbox')
+    expect(checkbox.className).toContain('motion-reduce:transition-none')
+
+    const title = screen.getByText('Buy groceries')
+    expect(title.className).toContain('motion-reduce:transition-none')
+  })
 })

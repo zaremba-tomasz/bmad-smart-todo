@@ -55,12 +55,13 @@ development_status:
   2-1-task-crud-api-and-basic-store: done
   2-2-optimistic-data-layer-and-sync-resilience: done
   2-3-basic-task-list-and-empty-state: done
-  2-4-task-completion-flow: backlog
+  2-4-task-completion-flow: done
   2-5-llm-provider-abstraction-and-extraction-api: backlog
   2-6-capture-input-component: backlog
   2-7-extraction-form-and-review-flow: backlog
   2-8-graceful-degradation-and-manual-form: backlog
   2-9-rapid-capture-pin-prompt-and-ai-transparency: backlog
+  2-10-e2e-test-suite: backlog
   epic-2-retrospective: optional
 
   # Epic 3: Task List Experience & Management
