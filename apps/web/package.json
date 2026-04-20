@@ -12,7 +12,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@smart-todo/shared": "workspace:*"
+    "@smart-todo/shared": "workspace:*",
+    "@supabase/supabase-js": "2.103.3",
+    "zod": "3.25.76"
   },
   "devDependencies": {
     "@smart-todo/config": "workspace:*",

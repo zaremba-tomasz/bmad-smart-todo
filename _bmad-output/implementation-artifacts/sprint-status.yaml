@@ -46,7 +46,7 @@ development_status:
   epic-1: in-progress
   1-1-monorepo-scaffold-and-shared-packages: done
   1-2-database-schema-and-auth-configuration: done
-  1-3-user-login-and-session-management: backlog
+  1-3-user-login-and-session-management: done
   1-4-authenticated-app-shell-with-responsive-layout: backlog
   epic-1-retrospective: optional
 
