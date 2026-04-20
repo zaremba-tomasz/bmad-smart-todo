@@ -7,9 +7,11 @@
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
-    "test:e2e": "turbo test:e2e"
+    "test:e2e": "turbo test:e2e",
+    "supabase": "supabase"
   },
   "devDependencies": {
+    "supabase": "^2.92.1",
     "turbo": "2.9.6"
   },
   "packageManager": "pnpm@10.15.0"

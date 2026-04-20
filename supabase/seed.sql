@@ -1,0 +1,26 @@
+-- Seed data for local development
+-- Story 1.2: Database Schema & Auth Configuration
+--
+-- EMAIL ALLOWLIST (Production Only)
+-- ==================================
+-- The Smart Todo MVP is restricted to 6 users.
+-- Email allowlist is configured via the Supabase Dashboard:
+--   1. Go to Authentication → URL Configuration
+--   2. Under "Restrict email sign-ups to specific domains or emails"
+--   3. Add the 6 MVP user email addresses
+--   4. Save
+--
+-- Local development does NOT enforce the email allowlist.
+-- Any email address can be used with the local Supabase instance.
+-- Magic link emails are captured by Inbucket (http://localhost:54324).
+--
+-- AUTH CONFIGURATION
+-- ==================
+-- - Authentication method: Magic link (passwordless)
+-- - Open registration: Disabled in production (allowlist-only)
+-- - Local dev: Open registration enabled for convenience
+-- - Session persistence: Handled by Supabase Auth SDK
+--
+-- This file is intentionally kept minimal for Story 1.2.
+-- No seed data is inserted — test data should be created through the app
+-- or via the Supabase Studio UI (http://localhost:54323).
