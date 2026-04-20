@@ -1,10 +1,20 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import type { User } from '@supabase/supabase-js'
+
+  import EmptyState from '$lib/components/EmptyState.svelte'
+  import SyncIndicator from '$lib/components/SyncIndicator.svelte'
+  import TaskList from '$lib/components/TaskList.svelte'
+  import { taskStore } from '$lib/stores/task-store.svelte'
 
   let { user, onLogout }: {
     user: User
     onLogout: () => void
   } = $props()
+
+  onMount(() => {
+    taskStore.loadTasks()
+  })
 </script>
 
 <a
@@ -47,15 +57,45 @@
     </div>
   </nav>
 
+  <div class="app-shell__sync-banner px-4 md:px-6">
+    <div class="mx-auto w-full max-w-xl">
+      <SyncIndicator mode="banner" />
+    </div>
+  </div>
+
   <main
     id="task-list"
     tabindex="-1"
     class="app-shell__main min-h-0 overflow-y-auto px-4 pb-24 outline-none md:px-6 md:pb-0"
   >
-    <div class="mx-auto w-full max-w-xl py-16">
-      <p class="text-center text-[length:var(--font-size-quiet)] text-text-tertiary">
-        Tasks will appear here
-      </p>
+    <div class="mx-auto w-full max-w-xl">
+      {#if taskStore.loading}
+        <p class="py-16 text-center text-[length:var(--font-size-quiet)] text-text-tertiary">
+          Loading…
+        </p>
+      {:else if taskStore.error !== null}
+        <div class="py-12 text-center">
+          <p class="text-[length:var(--font-size-quiet)] text-text-secondary">
+            Couldn&apos;t load tasks. Please try again.
+          </p>
+          <button
+            type="button"
+            class="mt-3 rounded-lg border border-border-default px-4 py-2 text-[length:var(--font-size-quiet)] text-text-secondary transition-colors motion-reduce:transition-none hover:border-border-focus hover:text-text-primary focus-visible:ring-2 focus-visible:ring-ring-focus focus-visible:ring-offset-2 focus-visible:outline-none"
+            onclick={() => taskStore.loadTasks()}
+          >
+            Retry
+          </button>
+        </div>
+      {:else if taskStore.openTasks.length === 0 && taskStore.completedCount === 0}
+        <EmptyState />
+      {:else}
+        <TaskList
+          tasks={taskStore.openTasks}
+          completedCount={taskStore.completedCount}
+          onComplete={(id) => taskStore.completeTask(id)}
+          onUncomplete={(id) => taskStore.uncompleteTask(id)}
+        />
+      {/if}
     </div>
   </main>
 
@@ -76,8 +116,9 @@
     grid-template-areas:
       "header"
       "nav"
+      "sync-banner"
       "main";
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr);
   }
 
   .app-shell__header {
@@ -92,6 +133,10 @@
     grid-area: nav;
   }
 
+  .app-shell__sync-banner {
+    grid-area: sync-banner;
+  }
+
   .app-shell__main {
     grid-area: main;
   }
@@ -102,8 +147,9 @@
         "header"
         "capture"
         "nav"
+        "sync-banner"
         "main";
-      grid-template-rows: auto auto auto minmax(0, 1fr);
+      grid-template-rows: auto auto auto auto minmax(0, 1fr);
     }
   }
 </style>

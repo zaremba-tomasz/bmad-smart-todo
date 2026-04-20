@@ -54,7 +54,7 @@ development_status:
   epic-2: in-progress
   2-1-task-crud-api-and-basic-store: done
   2-2-optimistic-data-layer-and-sync-resilience: done
-  2-3-basic-task-list-and-empty-state: backlog
+  2-3-basic-task-list-and-empty-state: done
   2-4-task-completion-flow: backlog
   2-5-llm-provider-abstraction-and-extraction-api: backlog
   2-6-capture-input-component: backlog
