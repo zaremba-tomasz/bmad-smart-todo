@@ -51,8 +51,8 @@ development_status:
   epic-1-retrospective: done
 
   # Epic 2: Smart Task Capture & Core Loop
-  epic-2: backlog
-  2-1-task-crud-api-and-basic-store: backlog
+  epic-2: in-progress
+  2-1-task-crud-api-and-basic-store: done
   2-2-optimistic-data-layer-and-sync-resilience: backlog
   2-3-basic-task-list-and-empty-state: backlog
   2-4-task-completion-flow: backlog

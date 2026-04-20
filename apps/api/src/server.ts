@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify'
 
 import { authMiddleware } from './middleware/auth.js'
 import { healthRoutes } from './routes/health.js'
+import { taskRoutes } from './routes/tasks.js'
 
 export function buildServer(): FastifyInstance {
   const fastify = Fastify({
@@ -22,6 +23,7 @@ export function buildServer(): FastifyInstance {
   })
 
   fastify.register(healthRoutes)
+  fastify.register(taskRoutes)
 
   return fastify
 }
