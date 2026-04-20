@@ -1,6 +1,7 @@
 export {
   TaskSchema,
   CreateTaskRequestSchema,
+  ExtractRequestSchema,
   ExtractionResultSchema,
   GroupSchema,
   ApiSuccessSchema,

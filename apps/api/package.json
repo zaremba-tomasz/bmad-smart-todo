@@ -11,11 +11,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@smart-todo/shared": "workspace:*",
     "@fastify/rate-limit": "10.3.0",
+    "@smart-todo/shared": "workspace:*",
     "@supabase/supabase-js": "2.103.3",
     "fastify": "5.8.5",
-    "zod": "3.25.76"
+    "zod": "3.25.76",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@smart-todo/config": "workspace:*",

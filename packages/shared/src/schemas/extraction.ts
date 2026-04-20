@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+export const ExtractRequestSchema = z.object({
+  text: z.string().min(1),
+})
+
 export const ExtractionResultSchema = z.object({
   title: z.string().min(1),
   dueDate: z.string().nullable(),

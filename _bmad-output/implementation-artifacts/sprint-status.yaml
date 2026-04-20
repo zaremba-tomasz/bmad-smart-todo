@@ -56,7 +56,7 @@ development_status:
   2-2-optimistic-data-layer-and-sync-resilience: done
   2-3-basic-task-list-and-empty-state: done
   2-4-task-completion-flow: done
-  2-5-llm-provider-abstraction-and-extraction-api: backlog
+  2-5-llm-provider-abstraction-and-extraction-api: done
   2-6-capture-input-component: backlog
   2-7-extraction-form-and-review-flow: backlog
   2-8-graceful-degradation-and-manual-form: backlog

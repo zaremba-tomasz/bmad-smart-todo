@@ -1,7 +1,9 @@
+import rateLimit from '@fastify/rate-limit'
 import Fastify from 'fastify'
 import type { FastifyInstance } from 'fastify'
 
 import { authMiddleware } from './middleware/auth.js'
+import { extractRoutes } from './routes/extract.js'
 import { healthRoutes } from './routes/health.js'
 import { taskRoutes } from './routes/tasks.js'
 
@@ -12,8 +14,8 @@ export function buildServer(): FastifyInstance {
     },
   })
 
-  fastify.addHook('preHandler', async (request, reply) => {
-    const routePath = request.routeOptions.url ?? request.url
+  fastify.addHook('onRequest', async (request, reply) => {
+    const routePath = request.url
 
     if (!routePath.startsWith('/api/') || routePath === '/api/health') {
       return
@@ -22,8 +24,19 @@ export function buildServer(): FastifyInstance {
     return authMiddleware(request, reply)
   })
 
+  fastify.register(rateLimit, {
+    global: false,
+    keyGenerator: (request) => request.userId,
+    hook: 'preHandler',
+    errorResponseBuilder: (_request, context) => ({
+      statusCode: context.statusCode,
+      error: { code: 'RATE_LIMITED', message: 'Too many extraction requests. Try again later.' },
+    }),
+  })
+
   fastify.register(healthRoutes)
   fastify.register(taskRoutes)
+  fastify.register(extractRoutes)
 
   return fastify
 }
