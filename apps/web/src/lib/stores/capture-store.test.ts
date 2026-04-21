@@ -372,6 +372,35 @@ describe('captureStore', () => {
       expect(captureStore.state).toEqual('idle')
     })
 
+    it('allows immediate re-extraction after save (rapid re-entry)', async () => {
+      mockCreateTask.mockResolvedValue(undefined)
+      await setupExtractedState()
+
+      captureStore.saveTask()
+
+      expect(captureStore.state).toEqual('idle')
+      expect(captureStore.rawInput).toEqual('')
+
+      mockPost.mockResolvedValue({
+        ok: true,
+        data: {
+          data: {
+            title: 'Second task',
+            dueDate: null,
+            dueTime: null,
+            location: null,
+            priority: null,
+            recurrence: null,
+          },
+        },
+      })
+
+      await captureStore.submitForExtraction('Second task right away')
+
+      expect(captureStore.state).toEqual('extracted')
+      expect(captureStore.extractedFields?.title).toEqual('Second task')
+    })
+
     it('resets immediately even if createTask rejects', async () => {
       mockCreateTask.mockRejectedValue(new Error('save failed'))
       await setupExtractedState()

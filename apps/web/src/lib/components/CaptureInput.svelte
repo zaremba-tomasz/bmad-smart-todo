@@ -15,11 +15,46 @@
   const descriptionId = `capture-input-description-${++captureInputInstanceCounter}`
 
   const isBusy = $derived(captureStore.state === 'extracting' || captureStore.state === 'saving')
+  const isFormShowing = $derived(captureStore.state === 'extracted' || captureStore.state === 'manual')
+
+  function getBurstText(previousInput: string, newValue: string, inputEvent: InputEvent): string {
+    if (newValue.startsWith(previousInput)) {
+      return newValue.slice(previousInput.length)
+    }
+
+    if (typeof inputEvent.data === 'string' && inputEvent.data.length > 0) {
+      return inputEvent.data
+    }
+
+    return newValue
+  }
 
   function handleSubmit() {
     if (isBusy) return
     if (!inputRef.value.trim()) return
     captureStore.submitForExtraction(inputRef.value)
+  }
+
+  function handleInput(e: Event) {
+    const target = e.currentTarget as HTMLInputElement
+    const newValue = target.value
+    const inputEvent = e as InputEvent
+
+    const isInsertion = inputEvent.inputType?.startsWith('insert') ?? false
+    if (isFormShowing && isInsertion && !inputEvent.isComposing) {
+      const previousInput = captureStore.rawInput
+      const didSave = captureStore.saveTask()
+
+      if (didSave) {
+        const newText = getBurstText(previousInput, newValue, inputEvent)
+        captureStore.setRawInput(newText)
+        target.value = newText
+        void captureStore.submitForExtraction(newText)
+        return
+      }
+    }
+
+    captureStore.setRawInput(newValue)
   }
 
   function handleKeydown(e: KeyboardEvent) {
@@ -89,7 +124,7 @@
       bind:this={inputRef}
       type="text"
       value={captureStore.rawInput}
-      oninput={(e) => captureStore.setRawInput(e.currentTarget.value)}
+      oninput={handleInput}
       onkeydown={handleKeydown}
       placeholder="Call the dentist next Monday, high priority"
       aria-label="Add a task"

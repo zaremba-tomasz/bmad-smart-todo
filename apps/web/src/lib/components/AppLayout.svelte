@@ -2,9 +2,11 @@
   import { onDestroy, onMount } from 'svelte'
   import type { User } from '@supabase/supabase-js'
 
+  import AiIndicator from '$lib/components/AiIndicator.svelte'
   import CaptureInput from '$lib/components/CaptureInput.svelte'
   import EmptyState from '$lib/components/EmptyState.svelte'
   import ExtractionForm from '$lib/components/ExtractionForm.svelte'
+  import PinPrompt from '$lib/components/PinPrompt.svelte'
   import SyncIndicator from '$lib/components/SyncIndicator.svelte'
   import TaskList from '$lib/components/TaskList.svelte'
   import { captureStore } from '$lib/stores/capture-store.svelte.js'
@@ -17,12 +19,52 @@
 
   let isDesktopViewport = $state(false)
   let cleanupViewportListener: (() => void) | undefined
+  let showPinPrompt = $state(false)
+  let pinPromptDismissed = $state(false)
+  let previousCaptureState: string = 'idle'
+  const PIN_PROMPT_DISMISSED_KEY = 'smart-todo:pin-prompt-dismissed'
+
+  $effect(() => {
+    const current = captureStore.state
+    const wasSaving = previousCaptureState === 'saving'
+    if (current === 'idle' && wasSaving && !pinPromptDismissed && isDesktopViewport) {
+      showPinPrompt = true
+    }
+    previousCaptureState = current
+  })
+
+  function handlePinPromptDismiss() {
+    showPinPrompt = false
+    pinPromptDismissed = true
+    const viewport = isDesktopViewport ? 'desktop' : 'mobile'
+    const captureInput = document.querySelector<HTMLInputElement>(`input[data-capture-input="${viewport}"]`)
+    captureInput?.focus()
+  }
+
   const showExtractionForm = $derived(
     captureStore.state === 'extracting'
     || captureStore.state === 'extracted'
     || captureStore.state === 'manual'
     || captureStore.state === 'saving',
   )
+
+  $effect(() => {
+    const count = taskStore.openTasks.length
+    document.title = count > 0 ? `${count} task${count !== 1 ? 's' : ''} · Smart Todo` : 'Smart Todo'
+  })
+
+  function handleEscapeKey(e: KeyboardEvent) {
+    if (e.key !== 'Escape') return
+    if (showPinPrompt && isDesktopViewport) return
+    if (!showExtractionForm) return
+
+    e.preventDefault()
+    captureStore.cancelExtraction()
+
+    const viewport = isDesktopViewport ? 'desktop' : 'mobile'
+    const captureInput = document.querySelector<HTMLInputElement>(`input[data-capture-input="${viewport}"]`)
+    captureInput?.focus()
+  }
 
   onMount(() => {
     if (typeof window.matchMedia !== 'function') {
@@ -44,6 +86,12 @@
       }
     }
 
+    try {
+      pinPromptDismissed = localStorage.getItem(PIN_PROMPT_DISMISSED_KEY) === 'true'
+    } catch {
+      pinPromptDismissed = false
+    }
+
     taskStore.loadTasks()
   })
 
@@ -51,6 +99,8 @@
     cleanupViewportListener?.()
   })
 </script>
+
+<svelte:window onkeydown={handleEscapeKey} />
 
 <a
   href="#task-list"
@@ -83,6 +133,10 @@
   <div class="app-shell__capture-desktop hidden px-4 md:block md:px-6">
     <div class="mx-auto w-full max-w-xl">
       <CaptureInput autofocus={true} viewport="desktop" />
+      <AiIndicator />
+      {#if showPinPrompt && isDesktopViewport}
+        <PinPrompt {isDesktopViewport} onDismiss={handlePinPromptDismiss} />
+      {/if}
       {#if showExtractionForm && isDesktopViewport}
         <ExtractionForm />
       {/if}
@@ -109,6 +163,7 @@
     <div class="mx-auto w-full max-w-xl">
       {#if showExtractionForm && !isDesktopViewport}
         <div class="md:hidden">
+          <AiIndicator />
           <ExtractionForm />
         </div>
       {/if}

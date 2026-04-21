@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mockSubmitForExtraction = vi.fn()
 const mockSetRawInput = vi.fn()
 const mockResetCapture = vi.fn()
+const mockSaveTask = vi.fn()
 const mockState = vi.fn()
 const mockRawInput = vi.fn()
 
@@ -12,6 +13,7 @@ vi.mock('$lib/stores/capture-store.svelte.js', () => ({
     submitForExtraction: (...args: unknown[]) => mockSubmitForExtraction(...args),
     setRawInput: (...args: unknown[]) => mockSetRawInput(...args),
     resetCapture: (...args: unknown[]) => mockResetCapture(...args),
+    saveTask: (...args: unknown[]) => mockSaveTask(...args),
     get state() { return mockState() },
     get rawInput() { return mockRawInput() },
     get extractedFields() { return null },
@@ -175,5 +177,113 @@ describe('CaptureInput', () => {
     const description = document.getElementById(describedBy ?? '')
     expect(description).toBeTruthy()
     expect(description?.textContent).toContain('Call the dentist next Monday, high priority')
+  })
+
+  describe('type-ahead / burst mode', () => {
+    it('calls saveTask and starts new extraction when typing while state is extracted', async () => {
+      mockState.mockReturnValue('extracted')
+      mockRawInput.mockReturnValue('Buy milk tomorrow')
+      mockSaveTask.mockReturnValue(true)
+
+      render(CaptureInput, { props: { autofocus: false } })
+      const input = screen.getByLabelText('Add a task') as HTMLInputElement
+
+      await fireEvent.input(input, { target: { value: 'Buy milk tomorrowW' }, inputType: 'insertText', data: 'W' })
+
+      expect(mockSaveTask).toHaveBeenCalled()
+      expect(mockSubmitForExtraction).toHaveBeenCalledWith('W')
+    })
+
+    it('calls saveTask when typing while state is manual', async () => {
+      mockState.mockReturnValue('manual')
+      mockRawInput.mockReturnValue('Some task')
+      mockSaveTask.mockReturnValue(true)
+
+      render(CaptureInput, { props: { autofocus: false } })
+      const input = screen.getByLabelText('Add a task') as HTMLInputElement
+
+      await fireEvent.input(input, { target: { value: 'Some taskX' }, inputType: 'insertText', data: 'X' })
+
+      expect(mockSaveTask).toHaveBeenCalled()
+    })
+
+    it('sets rawInput to only the newly typed characters after burst save', async () => {
+      mockState.mockReturnValue('extracted')
+      mockRawInput.mockReturnValue('Buy milk')
+      mockSaveTask.mockReturnValue(true)
+
+      render(CaptureInput, { props: { autofocus: false } })
+      const input = screen.getByLabelText('Add a task') as HTMLInputElement
+
+      await fireEvent.input(input, { target: { value: 'Buy milkW' }, inputType: 'insertText', data: 'W' })
+
+      expect(mockSetRawInput).toHaveBeenCalledWith('W')
+    })
+
+    it('uses inserted text when user types at the beginning (non-append edit)', async () => {
+      mockState.mockReturnValue('extracted')
+      mockRawInput.mockReturnValue('Buy milk')
+      mockSaveTask.mockReturnValue(true)
+
+      render(CaptureInput, { props: { autofocus: false } })
+      const input = screen.getByLabelText('Add a task') as HTMLInputElement
+
+      await fireEvent.input(input, { target: { value: 'XBuy milk' }, inputType: 'insertText', data: 'X' })
+
+      expect(mockSetRawInput).toHaveBeenCalledWith('X')
+      expect(mockSubmitForExtraction).toHaveBeenCalledWith('X')
+    })
+
+    it('does not call saveTask during idle state', async () => {
+      mockState.mockReturnValue('idle')
+      mockRawInput.mockReturnValue('')
+
+      render(CaptureInput, { props: { autofocus: false } })
+      const input = screen.getByLabelText('Add a task') as HTMLInputElement
+
+      await fireEvent.input(input, { target: { value: 'Hello' } })
+
+      expect(mockSaveTask).not.toHaveBeenCalled()
+      expect(mockSetRawInput).toHaveBeenCalledWith('Hello')
+    })
+
+    it('does not call saveTask during extracting state', async () => {
+      mockState.mockReturnValue('extracting')
+      mockRawInput.mockReturnValue('')
+
+      render(CaptureInput, { props: { autofocus: false } })
+      const input = screen.getByLabelText('Add a task') as HTMLInputElement
+
+      await fireEvent.input(input, { target: { value: 'Hello' } })
+
+      expect(mockSaveTask).not.toHaveBeenCalled()
+    })
+
+    it('does not call saveTask for non-insert input changes while form is showing', async () => {
+      mockState.mockReturnValue('extracted')
+      mockRawInput.mockReturnValue('Buy milk')
+
+      render(CaptureInput, { props: { autofocus: false } })
+      const input = screen.getByLabelText('Add a task') as HTMLInputElement
+
+      await fireEvent.input(input, { target: { value: 'Buy mil' }, inputType: 'deleteContentBackward' })
+
+      expect(mockSaveTask).not.toHaveBeenCalled()
+      expect(mockSetRawInput).toHaveBeenCalledWith('Buy mil')
+    })
+
+    it('falls back to setRawInput when saveTask returns false', async () => {
+      mockState.mockReturnValue('extracted')
+      mockRawInput.mockReturnValue('Buy milk')
+      mockSaveTask.mockReturnValue(false)
+
+      render(CaptureInput, { props: { autofocus: false } })
+      const input = screen.getByLabelText('Add a task') as HTMLInputElement
+
+      await fireEvent.input(input, { target: { value: 'Buy milkX' }, inputType: 'insertText', data: 'X' })
+
+      expect(mockSaveTask).toHaveBeenCalled()
+      expect(mockSetRawInput).toHaveBeenCalledWith('Buy milkX')
+    })
   })
 })

@@ -291,4 +291,98 @@ describe('AppLayout', () => {
     render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
     expect(screen.queryByLabelText('Title')).toBeNull()
   })
+
+  describe('Escape key cancellation', () => {
+    it('calls cancelExtraction on Escape when extraction form is showing', async () => {
+      mockCaptureState.mockReturnValue('extracted')
+      mockCaptureExtractedFields.mockReturnValue({
+        title: 'Test task',
+        dueDate: null,
+        dueTime: null,
+        location: null,
+        priority: null,
+        recurrence: null,
+      })
+
+      render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
+
+      await fireEvent.keyDown(window, { key: 'Escape' })
+
+      const { captureStore } = await import('$lib/stores/capture-store.svelte.js')
+      expect(captureStore.cancelExtraction).toHaveBeenCalled()
+    })
+
+    it('does not call cancelExtraction on Escape when state is idle', async () => {
+      mockCaptureState.mockReturnValue('idle')
+
+      render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
+
+      await fireEvent.keyDown(window, { key: 'Escape' })
+
+      const { captureStore } = await import('$lib/stores/capture-store.svelte.js')
+      expect(captureStore.cancelExtraction).not.toHaveBeenCalled()
+    })
+
+    it('calls cancelExtraction on Escape during extracting state', async () => {
+      mockCaptureState.mockReturnValue('extracting')
+
+      render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
+
+      await fireEvent.keyDown(window, { key: 'Escape' })
+
+      const { captureStore } = await import('$lib/stores/capture-store.svelte.js')
+      expect(captureStore.cancelExtraction).toHaveBeenCalled()
+    })
+
+    it('calls cancelExtraction on Escape during manual state', async () => {
+      mockCaptureState.mockReturnValue('manual')
+      mockCaptureExtractedFields.mockReturnValue({
+        title: 'Manual task',
+        dueDate: null,
+        dueTime: null,
+        location: null,
+        priority: null,
+        recurrence: null,
+      })
+
+      render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
+
+      await fireEvent.keyDown(window, { key: 'Escape' })
+
+      const { captureStore } = await import('$lib/stores/capture-store.svelte.js')
+      expect(captureStore.cancelExtraction).toHaveBeenCalled()
+    })
+  })
+
+  describe('dynamic document title', () => {
+    it('sets document title to "N tasks · Smart Todo" when open tasks exist', () => {
+      mockOpenTasks.mockReturnValue([
+        { id: 't1', title: 'Task 1', isCompleted: false },
+        { id: 't2', title: 'Task 2', isCompleted: false },
+        { id: 't3', title: 'Task 3', isCompleted: false },
+      ])
+
+      render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
+
+      expect(document.title).toBe('3 tasks · Smart Todo')
+    })
+
+    it('uses singular "task" for 1 open task', () => {
+      mockOpenTasks.mockReturnValue([
+        { id: 't1', title: 'Task 1', isCompleted: false },
+      ])
+
+      render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
+
+      expect(document.title).toBe('1 task · Smart Todo')
+    })
+
+    it('sets document title to "Smart Todo" when no open tasks', () => {
+      mockOpenTasks.mockReturnValue([])
+
+      render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
+
+      expect(document.title).toBe('Smart Todo')
+    })
+  })
 })
