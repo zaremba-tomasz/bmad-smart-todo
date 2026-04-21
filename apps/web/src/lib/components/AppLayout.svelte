@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import type { User } from '@supabase/supabase-js'
 
+  import CaptureInput from '$lib/components/CaptureInput.svelte'
   import EmptyState from '$lib/components/EmptyState.svelte'
   import SyncIndicator from '$lib/components/SyncIndicator.svelte'
   import TaskList from '$lib/components/TaskList.svelte'
@@ -45,9 +46,9 @@
     </div>
   </header>
 
-  <div class="app-shell__capture-desktop hidden px-4 md:block md:px-6" aria-hidden="true">
-    <div class="mx-auto flex h-14 w-full max-w-xl items-center rounded-lg border border-border-default bg-surface-raised px-4 shadow-sm">
-      <span class="text-[length:var(--font-size-input)] text-text-tertiary">Add a task…</span>
+  <div class="app-shell__capture-desktop hidden px-4 md:block md:px-6">
+    <div class="mx-auto w-full max-w-xl">
+      <CaptureInput autofocus={true} />
     </div>
   </div>
 
@@ -101,11 +102,10 @@
 
   <div
     class="fixed inset-x-0 bottom-0 border-t border-border-default bg-surface-raised md:hidden"
-    style="padding-bottom: env(safe-area-inset-bottom, 0px);"
-    aria-hidden="true"
+    style="bottom: env(keyboard-inset-bottom, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);"
   >
-    <div class="mx-auto flex h-14 w-full max-w-xl items-center px-4">
-      <span class="text-[length:var(--font-size-input)] text-text-tertiary">Add a task…</span>
+    <div class="mx-auto w-full max-w-xl px-4">
+      <CaptureInput autofocus={false} />
     </div>
   </div>
 </div>

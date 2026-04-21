@@ -1,5 +1,5 @@
 # generated: 2026-04-16
-# last_updated: 2026-04-20
+# last_updated: 2026-04-21T07:23:15Z
 # project: todo-app-bmad-training
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-16
-last_updated: 2026-04-20
+last_updated: 2026-04-21T07:23:15Z
 project: todo-app-bmad-training
 project_key: NOKEY
 tracking_system: file-system
@@ -57,7 +57,7 @@ development_status:
   2-3-basic-task-list-and-empty-state: done
   2-4-task-completion-flow: done
   2-5-llm-provider-abstraction-and-extraction-api: done
-  2-6-capture-input-component: backlog
+  2-6-capture-input-component: done
   2-7-extraction-form-and-review-flow: backlog
   2-8-graceful-degradation-and-manual-form: backlog
   2-9-rapid-capture-pin-prompt-and-ai-transparency: backlog

@@ -24,3 +24,5 @@ export type TaskWithSync = Task & {
   syncStatus: SyncStatus
   tempId?: string
 }
+
+export type CaptureState = 'idle' | 'extracting' | 'extracted' | 'manual' | 'saving'

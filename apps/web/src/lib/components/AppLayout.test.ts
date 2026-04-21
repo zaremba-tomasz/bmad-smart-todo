@@ -31,6 +31,17 @@ vi.mock('$lib/stores/task-store.svelte', () => ({
   },
 }))
 
+vi.mock('$lib/stores/capture-store.svelte', () => ({
+  captureStore: {
+    submitForExtraction: vi.fn(),
+    setRawInput: vi.fn(),
+    resetCapture: vi.fn(),
+    get state() { return 'idle' },
+    get rawInput() { return '' },
+    get extractedFields() { return null },
+  },
+}))
+
 import AppLayout from './AppLayout.svelte'
 
 const mockUser = {
@@ -106,11 +117,24 @@ describe('AppLayout', () => {
     expect(onLogout).toHaveBeenCalledOnce()
   })
 
-  it('renders capture placeholder on desktop and mobile', () => {
+  it('renders CaptureInput in the layout', () => {
     render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
-    const placeholders = screen.getAllByText('Add a task…')
-    expect(placeholders).toHaveLength(2)
-    expect(placeholders.every((placeholder) => placeholder.closest('[aria-hidden="true"]'))).toBe(true)
+    const inputs = screen.getAllByLabelText('Add a task')
+    expect(inputs.length).toBeGreaterThanOrEqual(1)
+    expect(inputs[0].tagName).toBe('INPUT')
+  })
+
+  it('renders submit task button in the layout', () => {
+    render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
+    const buttons = screen.getAllByLabelText('Submit task')
+    expect(buttons.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('renders unique capture input description ids for both instances', () => {
+    render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
+    const descriptions = Array.from(document.querySelectorAll('[id^="capture-input-description-"]'))
+    expect(descriptions.length).toBe(2)
+    expect(new Set(descriptions.map((element) => element.id)).size).toBe(descriptions.length)
   })
 
   it('displays user email', () => {

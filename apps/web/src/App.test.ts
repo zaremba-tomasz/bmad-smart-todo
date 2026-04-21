@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/svelte'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/svelte'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 let mockUser: { id: string; email: string } | null = null
 let mockLoading = false
@@ -20,10 +20,42 @@ vi.mock('$lib/auth-errors', () => ({
   getLoginErrorMessage: (msg: string) => msg,
 }))
 
+vi.mock('$lib/stores/task-store.svelte', () => ({
+  taskStore: {
+    loadTasks: vi.fn(),
+    completeTask: vi.fn(),
+    uncompleteTask: vi.fn(),
+    getSyncStatus: vi.fn().mockReturnValue('synced'),
+    retryMutation: vi.fn(),
+    get tasks() { return [] },
+    get openTasks() { return [] },
+    get completedCount() { return 0 },
+    get loading() { return false },
+    get error() { return null },
+    get hasPendingMutations() { return false },
+    get pendingMutations() { return [] },
+  },
+}))
+
+vi.mock('$lib/stores/capture-store.svelte', () => ({
+  captureStore: {
+    submitForExtraction: vi.fn(),
+    setRawInput: vi.fn(),
+    resetCapture: vi.fn(),
+    get state() { return 'idle' },
+    get rawInput() { return '' },
+    get extractedFields() { return null },
+  },
+}))
+
 describe('App', () => {
   beforeEach(() => {
     mockUser = null
     mockLoading = false
+  })
+
+  afterEach(() => {
+    cleanup()
   })
 
   it('renders login form when unauthenticated', async () => {
