@@ -546,39 +546,45 @@ With Svelte's ~2-5KB runtime, the performance budget has comfortable headroom:
 
 **Docker Compose Structure:**
 
-```yaml
-services:
-  proxy:
-    image: traefik  # or nginx as reverse proxy
-    ports: ["443:443", "80:80"]
-    # Routes /api/* → api, /* → web
-  web:
-    build: ./apps/web
-    environment:
-      - SUPABASE_URL
-      - SUPABASE_ANON_KEY
-  api:
-    build: ./apps/api
-    environment:
-      - SUPABASE_URL
-      - SUPABASE_ANON_KEY
-      - SUPABASE_SERVICE_ROLE_KEY
-      - OPENROUTER_API_KEY
-      - OPENROUTER_MODEL
-      - LM_STUDIO_URL
-      - LLM_PROVIDER
+The Docker Compose stack is fully self-contained — a single `docker compose up` starts Supabase infrastructure alongside the application services. No external Supabase instance required.
+
+| Service | Image | Purpose | Exposed Port |
+|---|---|---|---|
+| `db` | `supabase/postgres` | PostgreSQL with Supabase extensions, roles, and RLS | — (internal) |
+| `auth` | `supabase/gotrue` | Auth service (magic links, JWT issuance) | — (via Kong) |
+| `rest` | `postgrest/postgrest` | REST API for direct DB access (used by Supabase SDK) | — (via Kong) |
+| `kong` | `kong/kong` | Supabase API gateway (routes `/auth/v1/*`, `/rest/v1/*`) | **8000** |
+| `meta` | `supabase/postgres-meta` | DB metadata API (used by Studio) | — (internal) |
+| `studio` | `supabase/studio` | Supabase Dashboard UI | **54323** |
+| `inbucket` | `inbucket/inbucket` | Email capture for magic link testing | **54324** |
+| `proxy` | `nginx:alpine` | Reverse proxy: `/*` → web, `/api/*` → api | **80** |
+| `web` | custom (Svelte SPA) | Frontend — Nginx serving static files | — (via proxy) |
+| `api` | custom (Fastify BFF) | Backend — all data operations | — (via proxy) |
+
+```
+Browser → :80 (nginx proxy) → web (SPA) or api (BFF)
+Browser → :8000 (Kong) → auth/rest (Supabase SDK calls)
+Browser → :54323 (Studio) → meta → db (dashboard)
+Browser → :54324 (Inbucket) → view magic link emails
 ```
 
-No ports exposed on `web` or `api` containers — traffic flows exclusively through the reverse proxy. TLS termination at the proxy layer.
+**URL configuration:**
+- SPA container receives `SUPABASE_URL=http://localhost:8000` (browser-accessible via Kong)
+- API container receives `SUPABASE_URL=http://kong:8000` (internal Docker network — no hairpin NAT)
+- GoTrue's `GOTRUE_SITE_URL=http://localhost` points auth callbacks to the app on port 80
+- GoTrue sends emails via Inbucket's SMTP on port 2500 (internal)
+
+No ports exposed on `web` or `api` containers — traffic flows exclusively through the reverse proxy. Database data is persisted in a named Docker volume (`supabase-db-data`). App migrations auto-apply on first DB start via init script mount. TLS termination at the proxy layer for production deployments.
 
 **Development vs Production Environments:**
 
 Local development does NOT use Docker or the reverse proxy. Instead:
 - `pnpm dev` runs both apps via Turborepo
 - Vite's `server.proxy` configuration routes `/api/*` to the local Fastify server (e.g., `localhost:3001`) — transparent same-origin behavior during development
-- No TLS, no containers, instant HMR feedback
+- `supabase start` runs Supabase locally via the CLI (uses its own Docker containers under the hood)
+- No TLS, no containers for app code, instant HMR feedback
 
-Production uses the full Docker Compose stack with the reverse proxy. A separate `docker-compose.prod.yml` can override or extend the base config for production-specific settings (TLS certificates, resource limits, restart policies).
+Docker Compose runs the full self-contained stack. A separate `docker-compose.prod.yml` can override or extend the base config for production-specific settings (TLS certificates, resource limits, restart policies, real SMTP server instead of Inbucket).
 
 **CI/CD Pipeline (Turborepo):**
 
