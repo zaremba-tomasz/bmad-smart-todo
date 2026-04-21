@@ -1166,6 +1166,7 @@ pnpm dev                    # Turborepo runs both apps in parallel
 # apps/web: Vite dev server on :5173, proxies /api/* → :3001
 # apps/api: tsx watch mode on :3001
 # Supabase: local via `supabase start` or remote project
+pnpm lighthouse             # Build web app, serve, run Lighthouse CI audit (fails if Performance < 90)
 ```
 
 **Production Deployment (Docker):**

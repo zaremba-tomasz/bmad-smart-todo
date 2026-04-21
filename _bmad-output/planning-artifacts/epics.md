@@ -988,6 +988,34 @@ So that I can verify actual request-response cycles, RLS policies, and auth flow
 
 **Note:** This story covers API endpoints implemented in Epic 2. As Epic 3 and Epic 4 add new endpoints (PATCH/DELETE tasks, groups CRUD, feedback), their stories should extend the integration test suite.
 
+### Story 2.12: Lighthouse CI Gate & Local Performance Script
+
+As a developer,
+I want Lighthouse performance analysis running as a CI quality gate and available as a local development script,
+So that performance regressions are caught before merge and I can profile performance during development.
+
+**Acceptance Criteria:**
+
+**Given** the web app is built
+**When** I run `pnpm lighthouse` from the monorepo root
+**Then** Lighthouse CI runs against the production build of apps/web served locally
+**And** performance, accessibility, best-practices, and SEO categories are audited
+**And** the results are printed to the console with category scores
+**And** the command exits with non-zero status if Performance score < 90
+
+**Given** a PR is opened against main
+**When** the CI pipeline runs the Lighthouse job
+**Then** Lighthouse CI audits the built SPA served via a local static server
+**And** the job fails (blocks merge) if Performance score < 90 (NFR8)
+**And** Lighthouse HTML report is uploaded as a CI artifact on failure
+
+**Given** a developer wants to inspect performance locally
+**When** they run `pnpm lighthouse` in the monorepo root
+**Then** the script builds the web app (if not already built), serves it, runs Lighthouse, and tears down the server
+**And** results are available in the console for quick iteration
+
+**Note:** This story activates the commented-out Lighthouse placeholder in ci.yml from Story 1.1. The @lhci/cli package (Lighthouse CI) is the recommended tooling. Performance budget configuration should be co-located with the web app.
+
 ## Epic 3: Task List Experience & Management
 
 The list becomes a real tool. Temporal sorting surfaces what's due today. The full completed section shows progress with temporal framing ("3 today, 14 this week"). Users can view task details, edit any field, and delete tasks with a recovery path. Extraction quality feedback (thumbs up/down) enables validation-period optimization.

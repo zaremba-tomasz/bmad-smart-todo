@@ -10,7 +10,8 @@
     "test": "turbo test",
     "test:e2e": "turbo test:e2e",
     "test:integration": "turbo test:integration",
-    "supabase": "supabase"
+    "supabase": "supabase",
+    "lighthouse": "turbo build --filter=@smart-todo/web && pnpm --filter @smart-todo/web lighthouse"
   },
   "devDependencies": {
     "supabase": "^2.92.1",

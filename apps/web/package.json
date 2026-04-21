@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "svelte-check --tsconfig ./tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lighthouse": "lhci autorun"
   },
   "dependencies": {
     "@smart-todo/shared": "workspace:*",
@@ -18,6 +19,7 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
     "@smart-todo/config": "workspace:*",
     "@sveltejs/vite-plugin-svelte": "5.1.1",
     "@tailwindcss/vite": "4.2.2",
