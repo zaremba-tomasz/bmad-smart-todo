@@ -18,7 +18,10 @@
   let isDesktopViewport = $state(false)
   let cleanupViewportListener: (() => void) | undefined
   const showExtractionForm = $derived(
-    captureStore.state === 'extracting' || captureStore.state === 'extracted' || captureStore.state === 'saving',
+    captureStore.state === 'extracting'
+    || captureStore.state === 'extracted'
+    || captureStore.state === 'manual'
+    || captureStore.state === 'saving',
   )
 
   onMount(() => {

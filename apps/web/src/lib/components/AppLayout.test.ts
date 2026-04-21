@@ -270,6 +270,21 @@ describe('AppLayout', () => {
     expect(screen.getAllByLabelText('Title')).toHaveLength(1)
   })
 
+  it('renders ExtractionForm when captureStore state is manual', () => {
+    mockCaptureState.mockReturnValue('manual')
+    mockCaptureExtractedFields.mockReturnValue({
+      title: 'Manual fallback task',
+      dueDate: null,
+      dueTime: null,
+      location: null,
+      priority: null,
+      recurrence: null,
+    })
+
+    render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
+    expect(screen.getAllByLabelText('Title')).toHaveLength(1)
+  })
+
   it('does not render ExtractionForm when captureStore state is idle', () => {
     mockCaptureState.mockReturnValue('idle')
 

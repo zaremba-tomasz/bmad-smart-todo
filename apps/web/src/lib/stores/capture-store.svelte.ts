@@ -57,10 +57,26 @@ export const captureStore = {
         extractedFields = result.data.data
         state = 'extracted'
       } else {
+        extractedFields = {
+          title: rawInput,
+          dueDate: null,
+          dueTime: null,
+          location: null,
+          priority: null,
+          recurrence: null,
+        }
         state = 'manual'
       }
     } catch {
       if (requestToken !== extractionRequestToken) return
+      extractedFields = {
+        title: rawInput,
+        dueDate: null,
+        dueTime: null,
+        location: null,
+        priority: null,
+        recurrence: null,
+      }
       state = 'manual'
     } finally {
       if (timeoutId !== undefined) {

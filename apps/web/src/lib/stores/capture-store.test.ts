@@ -97,7 +97,7 @@ describe('captureStore', () => {
     expect(captureStore.rawInput).toEqual('Buy milk tomorrow at 10am at grocery store')
   })
 
-  it('extraction error (EXTRACTION_TIMEOUT) transitions to manual with rawInput preserved', async () => {
+  it('extraction error (EXTRACTION_TIMEOUT) transitions to manual with extractedFields populated', async () => {
     mockPost.mockResolvedValue({
       ok: false,
       error: { code: 'EXTRACTION_TIMEOUT', message: 'Extraction timed out' },
@@ -107,10 +107,17 @@ describe('captureStore', () => {
 
     expect(captureStore.state).toEqual('manual')
     expect(captureStore.rawInput).toEqual('Some task text')
-    expect(captureStore.extractedFields).toBeNull()
+    expect(captureStore.extractedFields).toEqual({
+      title: 'Some task text',
+      dueDate: null,
+      dueTime: null,
+      location: null,
+      priority: null,
+      recurrence: null,
+    })
   })
 
-  it('extraction error (EXTRACTION_PROVIDER_ERROR) transitions to manual', async () => {
+  it('extraction error (EXTRACTION_PROVIDER_ERROR) transitions to manual with extractedFields populated', async () => {
     mockPost.mockResolvedValue({
       ok: false,
       error: { code: 'EXTRACTION_PROVIDER_ERROR', message: 'Provider failed' },
@@ -120,9 +127,17 @@ describe('captureStore', () => {
 
     expect(captureStore.state).toEqual('manual')
     expect(captureStore.rawInput).toEqual('Another task')
+    expect(captureStore.extractedFields).toEqual({
+      title: 'Another task',
+      dueDate: null,
+      dueTime: null,
+      location: null,
+      priority: null,
+      recurrence: null,
+    })
   })
 
-  it('extraction error (EXTRACTION_VALIDATION_FAILED) transitions to manual', async () => {
+  it('extraction error (EXTRACTION_VALIDATION_FAILED) transitions to manual with extractedFields populated', async () => {
     mockPost.mockResolvedValue({
       ok: false,
       error: { code: 'EXTRACTION_VALIDATION_FAILED', message: 'Validation failed' },
@@ -132,9 +147,17 @@ describe('captureStore', () => {
 
     expect(captureStore.state).toEqual('manual')
     expect(captureStore.rawInput).toEqual('Bad input')
+    expect(captureStore.extractedFields).toEqual({
+      title: 'Bad input',
+      dueDate: null,
+      dueTime: null,
+      location: null,
+      priority: null,
+      recurrence: null,
+    })
   })
 
-  it('5s client-side timeout transitions to manual', async () => {
+  it('5s client-side timeout transitions to manual with extractedFields populated', async () => {
     mockPost.mockImplementation(
       () => new Promise(() => { /* never resolves */ }),
     )
@@ -148,6 +171,14 @@ describe('captureStore', () => {
 
     expect(captureStore.state).toEqual('manual')
     expect(captureStore.rawInput).toEqual('Slow task')
+    expect(captureStore.extractedFields).toEqual({
+      title: 'Slow task',
+      dueDate: null,
+      dueTime: null,
+      location: null,
+      priority: null,
+      recurrence: null,
+    })
   })
 
   it('clears timeout timer when request resolves before timeout', async () => {
@@ -216,13 +247,21 @@ describe('captureStore', () => {
     expect(captureStore.rawInput).toEqual('Hello')
   })
 
-  it('network error transitions to manual', async () => {
+  it('network error transitions to manual with extractedFields populated', async () => {
     mockPost.mockRejectedValue(new TypeError('Failed to fetch'))
 
     await captureStore.submitForExtraction('Offline task')
 
     expect(captureStore.state).toEqual('manual')
     expect(captureStore.rawInput).toEqual('Offline task')
+    expect(captureStore.extractedFields).toEqual({
+      title: 'Offline task',
+      dueDate: null,
+      dueTime: null,
+      location: null,
+      priority: null,
+      recurrence: null,
+    })
   })
 
   describe('saveTask()', () => {
@@ -307,6 +346,30 @@ describe('captureStore', () => {
       await captureStore.saveTask()
 
       expect(mockCreateTask).not.toHaveBeenCalled()
+    })
+
+    it('saveTask() works correctly from manual state', async () => {
+      mockCreateTask.mockResolvedValue(undefined)
+      mockPost.mockResolvedValue({
+        ok: false,
+        error: { code: 'EXTRACTION_TIMEOUT', message: 'Timeout' },
+      })
+      await captureStore.submitForExtraction('Manual task')
+      expect(captureStore.state).toEqual('manual')
+      expect(captureStore.extractedFields).not.toBeNull()
+
+      const result = captureStore.saveTask()
+
+      expect(result).toBe(true)
+      expect(mockCreateTask).toHaveBeenCalledWith({
+        title: 'Manual task',
+        dueDate: null,
+        dueTime: null,
+        location: null,
+        priority: null,
+        groupId: null,
+      })
+      expect(captureStore.state).toEqual('idle')
     })
 
     it('resets immediately even if createTask rejects', async () => {

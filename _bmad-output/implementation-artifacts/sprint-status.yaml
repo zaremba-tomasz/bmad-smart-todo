@@ -59,7 +59,7 @@ development_status:
   2-5-llm-provider-abstraction-and-extraction-api: done
   2-6-capture-input-component: done
   2-7-extraction-form-and-review-flow: done
-  2-8-graceful-degradation-and-manual-form: backlog
+  2-8-graceful-degradation-and-manual-form: done
   2-9-rapid-capture-pin-prompt-and-ai-transparency: backlog
   2-10-e2e-test-suite: backlog
   epic-2-retrospective: optional

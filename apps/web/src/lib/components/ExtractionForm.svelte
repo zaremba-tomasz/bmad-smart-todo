@@ -30,6 +30,7 @@
 
   let titleError = $state('')
   let titleInput: HTMLInputElement | undefined = $state()
+  let hasInitializedManualState = false
 
   let revealed = $state(false)
   let revealTimer: ReturnType<typeof setTimeout> | undefined
@@ -76,6 +77,30 @@
     }
   })
 
+  $effect(() => {
+    if (captureStore.state !== 'manual') {
+      hasInitializedManualState = false
+      return
+    }
+    if (!captureStore.extractedFields || hasInitializedManualState) return
+
+    hasInitializedManualState = true
+    const fields = captureStore.extractedFields
+    title = fields.title
+    dueDate = fields.dueDate
+    dueTime = fields.dueTime
+    priority = fields.priority
+    location = fields.location
+    editedFields = new Set()
+    addedFields = new Set()
+    showAddControls = true
+    titleError = ''
+
+    revealed = true
+    captureStore.setAnnouncement('Add details yourself')
+    queueMicrotask(() => { titleInput?.focus() })
+  })
+
   onDestroy(() => {
     if (shimmerTimer) clearTimeout(shimmerTimer)
     if (addControlsTimer) clearTimeout(addControlsTimer)
@@ -113,12 +138,16 @@
   }
 
   function fieldBg(field: string): string {
+    if (isManual) return 'bg-surface-raised'
     return editedFields.has(field) ? 'bg-surface-raised' : 'bg-surface-extracted'
   }
 
   let isSaving = $derived(captureStore.state === 'saving')
   let isExtracting = $derived(captureStore.state === 'extracting')
-  let isExtracted = $derived(captureStore.state === 'extracted' || captureStore.state === 'saving')
+  let isManual = $derived(captureStore.state === 'manual')
+  let isExtracted = $derived(
+    captureStore.state === 'extracted' || captureStore.state === 'manual' || captureStore.state === 'saving',
+  )
 </script>
 
 {#if isExtracting}
@@ -141,14 +170,22 @@
 
 {#if isExtracted}
   <div
-    class="extraction-form mt-3 rounded-xl border border-border-default p-4 space-y-3 transition-opacity duration-[var(--duration-reveal)] ease-out motion-reduce:transition-none"
-    class:opacity-0={!revealed}
-    class:translate-y-1={!revealed}
-    class:opacity-100={revealed}
-    class:translate-y-0={revealed}
+    class={`extraction-form mt-3 rounded-xl border border-border-default p-4 space-y-3 motion-reduce:transition-none ${
+      isManual ? '' : 'transition-opacity duration-[var(--duration-reveal)] ease-out'
+    }`}
+    class:opacity-0={!isManual && !revealed}
+    class:translate-y-1={!isManual && !revealed}
+    class:opacity-100={isManual || revealed}
+    class:translate-y-0={isManual || revealed}
     role="form"
     aria-label="Extracted task details"
   >
+    {#if isManual}
+      <p class="text-[length:var(--font-size-quiet)] text-text-secondary">
+        Add details yourself
+      </p>
+    {/if}
+
     <!-- Title (always shown) -->
     <div class="space-y-1">
       <label for="ef-title" class="block text-[length:var(--font-size-quiet)] font-medium text-text-secondary">

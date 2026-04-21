@@ -294,6 +294,145 @@ describe('ExtractionForm', () => {
     })
   })
 
+  describe('manual state', () => {
+    const manualFields = {
+      title: 'Buy groceries tomorrow morning',
+      dueDate: null,
+      dueTime: null,
+      location: null,
+      priority: null,
+      recurrence: null,
+    }
+
+    it('renders form with title pre-populated from rawInput', () => {
+      setStoreState('manual', manualFields)
+      render(ExtractionForm)
+
+      const titleInput = screen.getByLabelText('Title') as HTMLInputElement
+      expect(titleInput.value).toBe('Buy groceries tomorrow morning')
+    })
+
+    it('shows "Add details yourself" muted label', () => {
+      setStoreState('manual', manualFields)
+      render(ExtractionForm)
+
+      expect(screen.getByText('Add details yourself')).toBeTruthy()
+    })
+
+    it('manual form renders without reveal transition classes', () => {
+      setStoreState('manual', manualFields)
+      render(ExtractionForm)
+
+      const form = screen.getByRole('form', { name: 'Extracted task details' })
+      expect(form.className).not.toContain('transition-opacity')
+      expect(form.className).toContain('opacity-100')
+    })
+
+    it('announces manual guidance only once while editing', async () => {
+      setStoreState('manual', manualFields)
+      render(ExtractionForm)
+
+      const titleInput = screen.getByLabelText('Title') as HTMLInputElement
+      await fireEvent.input(titleInput, { target: { value: 'Buy groceries tonight' } })
+
+      expect(mockSetAnnouncement).toHaveBeenCalledTimes(1)
+      expect(mockSetAnnouncement).toHaveBeenCalledWith('Add details yourself')
+    })
+
+    it('does NOT show "Add details yourself" in extracted state (partial extraction)', () => {
+      setStoreState('extracted', partialFields)
+      render(ExtractionForm)
+
+      expect(screen.queryByText('Add details yourself')).toBeNull()
+    })
+
+    it('fields use bg-surface-raised, NOT bg-surface-extracted', () => {
+      setStoreState('manual', manualFields)
+      render(ExtractionForm)
+
+      const titleInput = screen.getByLabelText('Title')
+      expect(titleInput.className).toContain('bg-surface-raised')
+      expect(titleInput.className).not.toContain('bg-surface-extracted')
+    })
+
+    it('shows "+ Add" controls immediately (no 500ms delay)', () => {
+      setStoreState('manual', manualFields)
+      render(ExtractionForm)
+
+      expect(screen.getByText('+ Add date')).toBeTruthy()
+      expect(screen.getByText('+ Add time')).toBeTruthy()
+      expect(screen.getByText('+ Add priority')).toBeTruthy()
+      expect(screen.getByText('+ Add location')).toBeTruthy()
+    })
+
+    it('Save calls captureStore.saveTask() with correct values', async () => {
+      mockSaveTask.mockReturnValue(true)
+      setStoreState('manual', manualFields)
+      render(ExtractionForm)
+
+      const saveBtn = screen.getByRole('button', { name: 'Save' })
+      await fireEvent.click(saveBtn)
+
+      expect(mockUpdateField).toHaveBeenCalled()
+      expect(mockSaveTask).toHaveBeenCalled()
+    })
+
+    it('Save with empty title shows inline error', async () => {
+      setStoreState('manual', { ...manualFields, title: '' })
+      render(ExtractionForm)
+
+      const titleInput = screen.getByLabelText('Title') as HTMLInputElement
+      await fireEvent.input(titleInput, { target: { value: '' } })
+
+      const saveBtn = screen.getByRole('button', { name: 'Save' })
+      await fireEvent.click(saveBtn)
+
+      expect(screen.getByText('Title is required')).toBeTruthy()
+      expect(mockSaveTask).not.toHaveBeenCalled()
+    })
+
+    it('form has same tab order as extracted state', () => {
+      setStoreState('manual', {
+        ...manualFields,
+        dueDate: '2026-04-25',
+        dueTime: '10:00',
+        priority: 'high' as const,
+        location: 'Store',
+      })
+      render(ExtractionForm)
+
+      const titleInput = screen.getByLabelText('Title')
+      const dateField = screen.getByLabelText('Due date')
+      const timeField = screen.getByLabelText('Due time')
+      const priorityField = screen.getByLabelText('Priority')
+      const locationField = screen.getByLabelText('Location')
+      const saveBtn = screen.getByRole('button', { name: 'Save' })
+
+      expect(titleInput.compareDocumentPosition(dateField) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(dateField.compareDocumentPosition(timeField) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(timeField.compareDocumentPosition(priorityField) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(priorityField.compareDocumentPosition(locationField) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(locationField.compareDocumentPosition(saveBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('does not show shimmer', () => {
+      setStoreState('manual', manualFields)
+      render(ExtractionForm)
+
+      const shimmerBars = document.querySelectorAll('.shimmer-bar')
+      expect(shimmerBars.length).toBe(0)
+    })
+
+    it('focuses title input when manual form appears', async () => {
+      setStoreState('manual', manualFields)
+      render(ExtractionForm)
+      await tick()
+
+      const titleInput = screen.getByLabelText('Title') as HTMLInputElement
+      expect(document.activeElement).toBe(titleInput)
+    })
+  })
+
   describe('form not rendered in idle state', () => {
     it('does not render form content when state is idle', () => {
       setStoreState('idle')
