@@ -61,7 +61,7 @@ development_status:
   2-7-extraction-form-and-review-flow: done
   2-8-graceful-degradation-and-manual-form: done
   2-9-rapid-capture-pin-prompt-and-ai-transparency: done
-  2-10-e2e-test-suite: backlog
+  2-10-e2e-test-suite: done
   epic-2-retrospective: optional
 
   # Epic 3: Task List Experience & Management
