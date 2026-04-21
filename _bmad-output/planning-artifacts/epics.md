@@ -945,6 +945,49 @@ So that regressions are caught before deployment and the CI pipeline's E2E gate 
 
 **Note:** This story covers Epic 2 journeys only. Epic 3 (task editing, deletion, temporal grouping) and Epic 4 (groups, filtering) E2E tests will be added to their respective epics.
 
+### Story 2.11: API Integration Tests
+
+As a developer,
+I want automated integration tests that exercise API endpoints against a real database,
+So that I can verify actual request-response cycles, RLS policies, and auth flows beyond mocked unit tests.
+
+**Acceptance Criteria:**
+
+**Given** the integration test infrastructure is set up
+**When** I run `pnpm test:integration` in the API workspace
+**Then** Vitest runs a separate config (`vitest.integration.config.ts`) that targets `*.integration.test.ts` files
+**And** the script is distinct from the existing `test` (unit tests) script in `apps/api/package.json`
+
+**Given** a local Supabase instance is running (`supabase start`)
+**When** the integration tests execute
+**Then** they connect to the real local Supabase database with real RLS policies applied
+**And** test data is created and cleaned up per test (no shared mutable state between tests)
+
+**Given** the task route integration tests run
+**When** they exercise POST /api/tasks, GET /api/tasks, POST /api/tasks/:id/complete, POST /api/tasks/:id/uncomplete
+**Then** each endpoint is tested with real HTTP requests to a running Fastify server
+**And** database state changes are verified (task actually persisted, completion timestamp set, etc.)
+**And** response shapes match the shared Zod schemas
+
+**Given** the auth integration tests run
+**When** they exercise protected endpoints
+**Then** requests without a valid JWT receive HTTP 401 with UNAUTHORIZED error code
+**And** requests with a valid JWT for User A cannot access User B's tasks (real RLS enforcement)
+**And** the JWT verification cache behaves correctly with real Supabase tokens
+
+**Given** the extraction route integration tests run
+**When** they exercise POST /api/extract
+**Then** rate limiting is verified with real per-user enforcement (30 req/min)
+**And** validation errors, timeout handling, and error codes are tested against the real endpoint
+
+**Given** the integration tests run in CI
+**When** the pipeline executes
+**Then** `turbo test:integration` runs as a separate CI gate after unit tests
+**And** the CI job starts a local Supabase instance before running tests
+**And** the gate blocks merge on any test failure
+
+**Note:** This story covers API endpoints implemented in Epic 2. As Epic 3 and Epic 4 add new endpoints (PATCH/DELETE tasks, groups CRUD, feedback), their stories should extend the integration test suite.
+
 ## Epic 3: Task List Experience & Management
 
 The list becomes a real tool. Temporal sorting surfaces what's due today. The full completed section shows progress with temporal framing ("3 today, 14 this week"). Users can view task details, edit any field, and delete tasks with a recovery path. Extraction quality feedback (thumbs up/down) enables validation-period optimization.

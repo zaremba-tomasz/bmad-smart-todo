@@ -62,6 +62,7 @@ development_status:
   2-8-graceful-degradation-and-manual-form: done
   2-9-rapid-capture-pin-prompt-and-ai-transparency: done
   2-10-e2e-test-suite: done
+  2-11-api-integration-tests: review
   epic-2-retrospective: optional
 
   # Epic 3: Task List Experience & Management

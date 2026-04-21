@@ -9,6 +9,7 @@
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "test:e2e": "turbo test:e2e",
+    "test:integration": "turbo test:integration",
     "supabase": "supabase"
   },
   "devDependencies": {
