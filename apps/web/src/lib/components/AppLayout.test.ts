@@ -31,14 +31,23 @@ vi.mock('$lib/stores/task-store.svelte', () => ({
   },
 }))
 
-vi.mock('$lib/stores/capture-store.svelte', () => ({
+const mockCaptureState = vi.fn()
+const mockCaptureRawInput = vi.fn()
+const mockCaptureExtractedFields = vi.fn()
+
+vi.mock('$lib/stores/capture-store.svelte.js', () => ({
   captureStore: {
     submitForExtraction: vi.fn(),
     setRawInput: vi.fn(),
     resetCapture: vi.fn(),
-    get state() { return 'idle' },
-    get rawInput() { return '' },
-    get extractedFields() { return null },
+    saveTask: vi.fn(),
+    updateField: vi.fn(),
+    cancelExtraction: vi.fn(),
+    setAnnouncement: vi.fn(),
+    get announcement() { return '' },
+    get state() { return mockCaptureState() },
+    get rawInput() { return mockCaptureRawInput() },
+    get extractedFields() { return mockCaptureExtractedFields() },
   },
 }))
 
@@ -62,11 +71,27 @@ function setupDefaults() {
   mockGetSyncStatus.mockReturnValue('synced')
   mockHasPendingMutations.mockReturnValue(false)
   mockPendingMutations.mockReturnValue([])
+  mockCaptureState.mockReturnValue('idle')
+  mockCaptureRawInput.mockReturnValue('')
+  mockCaptureExtractedFields.mockReturnValue(null)
 }
 
 describe('AppLayout', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: true,
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    })
     setupDefaults()
   })
 
@@ -228,5 +253,27 @@ describe('AppLayout', () => {
     expect(screen.queryByText('Your task list is clear.')).toBeNull()
     expect(screen.getByText('1')).toBeTruthy()
     expect(screen.getByText('completed')).toBeTruthy()
+  })
+
+  it('renders ExtractionForm when captureStore state is extracted', () => {
+    mockCaptureState.mockReturnValue('extracted')
+    mockCaptureExtractedFields.mockReturnValue({
+      title: 'Test task',
+      dueDate: null,
+      dueTime: null,
+      location: null,
+      priority: null,
+      recurrence: null,
+    })
+
+    render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
+    expect(screen.getAllByLabelText('Title')).toHaveLength(1)
+  })
+
+  it('does not render ExtractionForm when captureStore state is idle', () => {
+    mockCaptureState.mockReturnValue('idle')
+
+    render(AppLayout, { props: { user: mockUser as any, onLogout: vi.fn() } })
+    expect(screen.queryByLabelText('Title')).toBeNull()
   })
 })

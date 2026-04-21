@@ -37,11 +37,16 @@ vi.mock('$lib/stores/task-store.svelte', () => ({
   },
 }))
 
-vi.mock('$lib/stores/capture-store.svelte', () => ({
+vi.mock('$lib/stores/capture-store.svelte.js', () => ({
   captureStore: {
     submitForExtraction: vi.fn(),
     setRawInput: vi.fn(),
     resetCapture: vi.fn(),
+    saveTask: vi.fn(),
+    updateField: vi.fn(),
+    cancelExtraction: vi.fn(),
+    setAnnouncement: vi.fn(),
+    get announcement() { return '' },
     get state() { return 'idle' },
     get rawInput() { return '' },
     get extractedFields() { return null },

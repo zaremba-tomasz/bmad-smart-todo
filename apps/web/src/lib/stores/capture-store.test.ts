@@ -1,10 +1,17 @@
 import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest'
 
 const mockPost = vi.fn()
+const mockCreateTask = vi.fn()
 
 vi.mock('$lib/api', () => ({
   api: {
     post: mockPost,
+  },
+}))
+
+vi.mock('$lib/stores/task-store.svelte.js', () => ({
+  taskStore: {
+    createTask: (...args: unknown[]) => mockCreateTask(...args),
   },
 }))
 
@@ -19,6 +26,11 @@ describe('captureStore', () => {
     vi.mock('$lib/api', () => ({
       api: {
         post: mockPost,
+      },
+    }))
+    vi.mock('$lib/stores/task-store.svelte.js', () => ({
+      taskStore: {
+        createTask: (...args: unknown[]) => mockCreateTask(...args),
       },
     }))
     ;({ captureStore } = await import('./capture-store.svelte'))
@@ -211,5 +223,207 @@ describe('captureStore', () => {
 
     expect(captureStore.state).toEqual('manual')
     expect(captureStore.rawInput).toEqual('Offline task')
+  })
+
+  describe('saveTask()', () => {
+    const extractedData = {
+      title: 'Buy milk',
+      dueDate: '2026-04-22',
+      dueTime: '10:00',
+      location: 'Store',
+      priority: 'high' as const,
+      recurrence: null,
+    }
+
+    async function setupExtractedState() {
+      mockPost.mockResolvedValue({
+        ok: true,
+        data: { data: extractedData },
+      })
+      await captureStore.submitForExtraction('Buy milk tomorrow')
+      expect(captureStore.state).toEqual('extracted')
+    }
+
+    it('calls taskStore.createTask with correctly mapped CreateTaskRequest (no recurrence, groupId: null)', async () => {
+      mockCreateTask.mockResolvedValue(undefined)
+      await setupExtractedState()
+
+      await captureStore.saveTask()
+
+      expect(mockCreateTask).toHaveBeenCalledWith({
+        title: 'Buy milk',
+        dueDate: '2026-04-22',
+        dueTime: '10:00',
+        location: 'Store',
+        priority: 'high',
+        groupId: null,
+      })
+    })
+
+    it('transitions state: extracted → saving → idle', async () => {
+      let capturedState: string | undefined
+      mockCreateTask.mockImplementation(() => {
+        capturedState = captureStore.state
+        return Promise.resolve()
+      })
+      await setupExtractedState()
+
+      await captureStore.saveTask()
+
+      expect(capturedState).toEqual('saving')
+      expect(captureStore.state).toEqual('idle')
+    })
+
+    it('clears rawInput and extractedFields after save', async () => {
+      mockCreateTask.mockResolvedValue(undefined)
+      await setupExtractedState()
+
+      expect(captureStore.rawInput).toEqual('Buy milk tomorrow')
+      expect(captureStore.extractedFields).not.toBeNull()
+
+      await captureStore.saveTask()
+
+      expect(captureStore.rawInput).toEqual('')
+      expect(captureStore.extractedFields).toBeNull()
+    })
+
+    it('does nothing when state is idle', async () => {
+      expect(captureStore.state).toEqual('idle')
+
+      await captureStore.saveTask()
+
+      expect(mockCreateTask).not.toHaveBeenCalled()
+    })
+
+    it('does nothing when extractedFields has empty title', async () => {
+      mockPost.mockResolvedValue({
+        ok: true,
+        data: {
+          data: { ...extractedData, title: '   ' },
+        },
+      })
+      await captureStore.submitForExtraction('test')
+
+      await captureStore.saveTask()
+
+      expect(mockCreateTask).not.toHaveBeenCalled()
+    })
+
+    it('resets immediately even if createTask rejects', async () => {
+      mockCreateTask.mockRejectedValue(new Error('save failed'))
+      await setupExtractedState()
+
+      const result = captureStore.saveTask()
+
+      expect(result).toBe(true)
+      expect(captureStore.state).toEqual('idle')
+      expect(captureStore.rawInput).toEqual('')
+      expect(captureStore.extractedFields).toBeNull()
+      await Promise.resolve()
+    })
+  })
+
+  describe('updateField()', () => {
+    it('updates extractedFields with new value', async () => {
+      mockPost.mockResolvedValue({
+        ok: true,
+        data: {
+          data: {
+            title: 'Test',
+            dueDate: null,
+            dueTime: null,
+            location: null,
+            priority: null,
+            recurrence: null,
+          },
+        },
+      })
+      await captureStore.submitForExtraction('Test')
+
+      captureStore.updateField('priority', 'high')
+
+      expect(captureStore.extractedFields?.priority).toEqual('high')
+    })
+
+    it('updates title field', async () => {
+      mockPost.mockResolvedValue({
+        ok: true,
+        data: {
+          data: {
+            title: 'Original',
+            dueDate: null,
+            dueTime: null,
+            location: null,
+            priority: null,
+            recurrence: null,
+          },
+        },
+      })
+      await captureStore.submitForExtraction('Original')
+
+      captureStore.updateField('title', 'New title')
+
+      expect(captureStore.extractedFields?.title).toEqual('New title')
+    })
+
+    it('does nothing when extractedFields is null', () => {
+      expect(captureStore.extractedFields).toBeNull()
+
+      captureStore.updateField('title', 'Test')
+
+      expect(captureStore.extractedFields).toBeNull()
+    })
+  })
+
+  describe('cancelExtraction()', () => {
+    it('resets state to idle, preserves rawInput, and ignores timeout completion', async () => {
+      mockPost.mockImplementation(() => new Promise(() => {}))
+      const promise = captureStore.submitForExtraction('Some task')
+
+      expect(captureStore.state).toEqual('extracting')
+      expect(captureStore.rawInput).toEqual('Some task')
+
+      captureStore.cancelExtraction()
+
+      expect(captureStore.state).toEqual('idle')
+      expect(captureStore.rawInput).toEqual('Some task')
+      expect(captureStore.extractedFields).toBeNull()
+
+      vi.advanceTimersByTime(5_000)
+      await promise
+
+      expect(captureStore.state).toEqual('idle')
+      expect(captureStore.extractedFields).toBeNull()
+    })
+
+    it('ignores a late successful extraction response after cancellation', async () => {
+      let resolvePost: ((value: unknown) => void) | undefined
+      mockPost.mockImplementation(
+        () => new Promise((resolve) => { resolvePost = resolve }),
+      )
+
+      const promise = captureStore.submitForExtraction('Late success')
+      expect(captureStore.state).toEqual('extracting')
+
+      captureStore.cancelExtraction()
+      resolvePost?.({
+        ok: true,
+        data: {
+          data: {
+            title: 'Should not apply',
+            dueDate: null,
+            dueTime: null,
+            location: null,
+            priority: null,
+            recurrence: null,
+          },
+        },
+      })
+      await promise
+
+      expect(captureStore.state).toEqual('idle')
+      expect(captureStore.rawInput).toEqual('Late success')
+      expect(captureStore.extractedFields).toBeNull()
+    })
   })
 })

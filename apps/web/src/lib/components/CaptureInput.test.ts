@@ -7,7 +7,7 @@ const mockResetCapture = vi.fn()
 const mockState = vi.fn()
 const mockRawInput = vi.fn()
 
-vi.mock('$lib/stores/capture-store.svelte', () => ({
+vi.mock('$lib/stores/capture-store.svelte.js', () => ({
   captureStore: {
     submitForExtraction: (...args: unknown[]) => mockSubmitForExtraction(...args),
     setRawInput: (...args: unknown[]) => mockSetRawInput(...args),
@@ -77,6 +77,14 @@ describe('CaptureInput', () => {
     const input = screen.getByLabelText('Add a task') as HTMLInputElement
     expect(input.disabled).toBe(true)
     expect(input.className).toContain('opacity-50')
+  })
+
+  it('input is disabled when captureStore state is saving', () => {
+    mockState.mockReturnValue('saving')
+    render(CaptureInput, { props: { autofocus: false } })
+
+    const input = screen.getByLabelText('Add a task') as HTMLInputElement
+    expect(input.disabled).toBe(true)
   })
 
   it('keyboard shortcut / focuses the input (when not already in an input)', async () => {

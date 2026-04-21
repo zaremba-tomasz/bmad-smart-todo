@@ -1,11 +1,13 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onDestroy, onMount } from 'svelte'
   import type { User } from '@supabase/supabase-js'
 
   import CaptureInput from '$lib/components/CaptureInput.svelte'
   import EmptyState from '$lib/components/EmptyState.svelte'
+  import ExtractionForm from '$lib/components/ExtractionForm.svelte'
   import SyncIndicator from '$lib/components/SyncIndicator.svelte'
   import TaskList from '$lib/components/TaskList.svelte'
+  import { captureStore } from '$lib/stores/capture-store.svelte.js'
   import { taskStore } from '$lib/stores/task-store.svelte'
 
   let { user, onLogout }: {
@@ -13,8 +15,37 @@
     onLogout: () => void
   } = $props()
 
+  let isDesktopViewport = $state(false)
+  let cleanupViewportListener: (() => void) | undefined
+  const showExtractionForm = $derived(
+    captureStore.state === 'extracting' || captureStore.state === 'extracted' || captureStore.state === 'saving',
+  )
+
   onMount(() => {
+    if (typeof window.matchMedia !== 'function') {
+      isDesktopViewport = true
+    } else {
+      const media = window.matchMedia('(min-width: 768px)')
+      isDesktopViewport = media.matches
+
+      const onChange = (event: MediaQueryListEvent) => {
+        isDesktopViewport = event.matches
+      }
+
+      if (typeof media.addEventListener === 'function') {
+        media.addEventListener('change', onChange)
+        cleanupViewportListener = () => media.removeEventListener('change', onChange)
+      } else {
+        media.addListener(onChange)
+        cleanupViewportListener = () => media.removeListener(onChange)
+      }
+    }
+
     taskStore.loadTasks()
+  })
+
+  onDestroy(() => {
+    cleanupViewportListener?.()
   })
 </script>
 
@@ -48,7 +79,10 @@
 
   <div class="app-shell__capture-desktop hidden px-4 md:block md:px-6">
     <div class="mx-auto w-full max-w-xl">
-      <CaptureInput autofocus={true} />
+      <CaptureInput autofocus={true} viewport="desktop" />
+      {#if showExtractionForm && isDesktopViewport}
+        <ExtractionForm />
+      {/if}
     </div>
   </div>
 
@@ -70,6 +104,11 @@
     class="app-shell__main min-h-0 overflow-y-auto px-4 pb-24 outline-none md:px-6 md:pb-0"
   >
     <div class="mx-auto w-full max-w-xl">
+      {#if showExtractionForm && !isDesktopViewport}
+        <div class="md:hidden">
+          <ExtractionForm />
+        </div>
+      {/if}
       {#if taskStore.loading}
         <p class="py-16 text-center text-[length:var(--font-size-quiet)] text-text-tertiary">
           Loading…
@@ -105,9 +144,13 @@
     style="bottom: env(keyboard-inset-bottom, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);"
   >
     <div class="mx-auto w-full max-w-xl px-4">
-      <CaptureInput autofocus={false} />
+      <CaptureInput autofocus={false} viewport="mobile" />
     </div>
   </div>
+</div>
+
+<div role="status" aria-live="polite" class="sr-only">
+  {captureStore.announcement}
 </div>
 
 <style>
